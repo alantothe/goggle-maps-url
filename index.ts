@@ -2,8 +2,9 @@ import prompts from 'prompts';
 import { join } from 'node:path';
 import { readdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { saveLocation, type LocationEntry } from './db';
+import { saveLocation, getAllLocations, type LocationEntry } from './db';
 import { generateGoogleMapsUrl, processLocationsFile, type RawLocation } from './utils';
+import { startServer } from './server';
 
 async function main() {
   console.log("🌍 Google Maps URL Generator CLI");
@@ -16,6 +17,8 @@ async function main() {
     choices: [
       { title: 'Single Location', value: 'single' },
       { title: 'Batch Mode (from file)', value: 'batch' },
+      { title: 'View Database History', value: 'history' },
+      { title: 'Start Web Interface', value: 'web' },
       { title: 'Exit', value: 'exit' }
     ]
   });
@@ -24,10 +27,33 @@ async function main() {
     await handleSingleMode();
   } else if (response.mode === 'batch') {
     await handleBatchMode();
+  } else if (response.mode === 'history') {
+    await handleViewHistory();
+  } else if (response.mode === 'web') {
+    startServer();
+    // Keep process alive for server
   } else {
     console.log("Goodbye!");
     process.exit(0);
   }
+}
+
+async function handleViewHistory() {
+  const locations = getAllLocations();
+  
+  if (locations.length === 0) {
+    console.log("\n📭 Database is empty.");
+    return;
+  }
+
+  console.log(`\n📜 Found ${locations.length} locations in history:\n`);
+  // console.table is nice, but let's make sure we display relevant info clearly
+  // Limiting URL length for display might be good if it's too long, but usually console.table handles it.
+  console.table(locations.map(l => ({
+    Name: l.name,
+    Address: l.address.length > 50 ? l.address.substring(0, 47) + '...' : l.address,
+    URL: l.url
+  })));
 }
 
 async function handleSingleMode() {
