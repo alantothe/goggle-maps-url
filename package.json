@@ -1,0 +1,19 @@
+{
+  "name": "url-util",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "csv-parse": "^6.1.0",
+    "prompts": "^2.4.2"
+  }
+}
