@@ -37,18 +37,6 @@ export async function parseTxt(filePath: string): Promise<RawLocation[]> {
     if (!line.trim()) continue;
     
     // Skip header if it looks like the example "Location Name | Full Address"
-    // Although the user example implies the file content starts with data or maybe header. 
-    // The example shows:
-    // Location Name | Full Address
-    // Panchita...
-    // But in the prompt description for TXT it says:
-    // "TXT with each line: Location Name | Full Address"
-    // The example provided:
-    // Panchita - Miraflores | C. 2 de Mayo 298, Miraflores 15074, Peru
-    // Eiffel Tower | Eiffel Tower Paris
-    // It doesn't explicitly say there is a header row in TXT like it does for CSV.
-    // I will check if the line contains the delimiter '|'.
-    
     if (line.includes('|')) {
       const [name, address] = line.split('|').map(s => s.trim());
       if (name && address) {
@@ -70,3 +58,46 @@ export async function processLocationsFile(filePath: string): Promise<RawLocatio
   }
 }
 
+export function extractInstagramData(html: string): { url: string | null, author: string | null } {
+  // Extract URL from data-instgrm-permalink
+  const permalinkMatch = html.match(/data-instgrm-permalink="([^"]+)"/);
+  let url = permalinkMatch ? permalinkMatch[1] : null;
+
+  // Clean URL query params if present (optional improvement, but cleaner for DB)
+  if (url && url.includes('?')) {
+    url = url.split('?')[0];
+  }
+
+  // Extract author from "A post shared by ..."
+  const authorMatch = html.match(/A post shared by ([^<]+)/);
+  const author = authorMatch ? authorMatch[1].trim() : null;
+
+  return { url, author };
+}
+
+export async function getCoordinates(address: string, apiKey: string): Promise<{ lat: number, lng: number } | null> {
+    if (!apiKey) {
+        console.warn("Google Maps API Key is missing.");
+        return null;
+    }
+    
+    try {
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === 'OK' && data.results && data.results.length > 0) {
+            const location = data.results[0].geometry.location;
+            return {
+                lat: location.lat,
+                lng: location.lng
+            };
+        } else {
+            console.warn(`Geocoding failed for "${address}": ${data.status} - ${data.error_message || ''}`);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching coordinates:", error);
+        return null;
+    }
+}
