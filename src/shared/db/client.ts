@@ -4,7 +4,7 @@ let db: Database | null = null;
 
 function ensureDb(): Database {
   if (!db) {
-    db = new Database("location.sqlite");
+    db = new Database("src/data/location.sqlite");
   }
   return db;
 }

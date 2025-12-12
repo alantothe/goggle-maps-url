@@ -1,6 +1,6 @@
-import { initDb } from "./shared/db/client";
-import { startHttpServer } from "./shared/http/server";
-import { getLocationRoutes } from "./features/locations/routes/location.routes";
+import { initDb } from "../shared/db/client";
+import { startHttpServer } from "../shared/http/server";
+import { getLocationRoutes } from "../features/locations/routes/location.routes";
 
 export function startServer(port = Number(process.env.PORT || 3000)) {
   initDb();

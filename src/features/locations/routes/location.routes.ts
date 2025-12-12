@@ -20,7 +20,7 @@ export function getLocationRoutes(): RouteDefinition[] {
     { method: "POST", match: pathMatcher("/api/open-folder"), handler: postOpenFolder },
     {
       method: "GET",
-      match: prefixMatcher("/images/"),
+      match: prefixMatcher("/src/data/images/"),
       handler: (_req, url) => serveImage(url.pathname),
     },
     { method: "GET", match: pathMatcher("/"), handler: serveHome },

@@ -2,11 +2,11 @@ import prompts from "prompts";
 import { join } from "node:path";
 import { readdir, writeFile, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { saveLocation, getAllLocations, clearDatabase, getLocationById } from "./features/locations/repositories/location.repository";
-import { processLocationsFile } from "./shared/utils/file";
-import { createFromMaps, createFromInstagram, extractInstagramData } from "./features/locations/services/location.factory";
+import { saveLocation, getAllLocations, clearDatabase, getLocationById } from "../features/locations/repositories/location.repository";
+import { processLocationsFile } from "../shared/utils/file";
+import { createFromMaps, createFromInstagram, extractInstagramData } from "../features/locations/services/location.factory";
 import { startServer } from "./main";
-import { initDb } from "./shared/db/client";
+import { initDb } from "../shared/db/client";
 
 async function main() {
   initDb();
@@ -126,13 +126,13 @@ async function handleSingleMode() {
   const save = await prompts({
     type: "confirm",
     name: "value",
-    message: "Save to output.json?",
+    message: "Save to src/data/output.json?",
     initial: true,
   });
 
   if (save.value) {
-    await updateJsonFile("output.json", output);
-    console.log(`Saved to ${process.cwd()}/output.json`);
+    await updateJsonFile("src/data/output.json", output);
+    console.log(`Saved to ${process.cwd()}/src/data/output.json`);
   }
 }
 

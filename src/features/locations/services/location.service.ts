@@ -191,7 +191,7 @@ export async function addInstagramEmbed(payload: AddInstagramRequest): Promise<L
           const filename = `image_${i}.jpg`;
           const filePath = join(timestampDir, filename);
           await Bun.write(filePath, await imgRes.blob());
-          savedPaths.push(`images/${cleanName}/instagram/${timestamp}/${filename}`);
+          savedPaths.push(`src/data/images/${cleanName}/instagram/${timestamp}/${filename}`);
         } catch (err) {
           console.error(`Error downloading image ${i + 1}:`, err);
         }
@@ -270,7 +270,7 @@ export async function addUploadFiles(parentId: number, files: File[]): Promise<L
     const filename = `image_${i}.${ext}`;
     const filePath = join(timestampDir, filename);
     await Bun.write(filePath, file);
-    savedPaths.push(`images/${cleanName}/uploads/${timestamp}/${filename}`);
+    savedPaths.push(`src/data/images/${cleanName}/uploads/${timestamp}/${filename}`);
   }
 
   if (savedPaths.length > 0) {
