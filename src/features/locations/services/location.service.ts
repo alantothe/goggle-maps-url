@@ -52,7 +52,7 @@ export async function addMapsLocation(payload: CreateMapsRequest, apiKey?: strin
   }
 
   const category = payload.category && VALID_CATEGORIES.includes(payload.category) ? payload.category : "attractions";
-  const entry = await createFromMaps(payload.name, payload.address, apiKey, category);
+  const entry = await createFromMaps(payload.name, payload.address, apiKey, category, payload.dining_type);
   saveLocation(entry);
   return entry;
 }
@@ -88,6 +88,7 @@ export async function updateMapsLocation(payload: UpdateMapsRequest, apiKey?: st
     name: payload.name,
     address: payload.address,
     category,
+    dining_type: payload.dining_type,
     url: newUrl,
     lat,
     lng,

@@ -166,11 +166,41 @@
             </div>
             <div class="mb-4">
                 <label for="locationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select id="locationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                <select id="locationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleTypeField()">
                   <option value="attractions">🎯 Attractions</option>
                   <option value="dining">🍽️ Dining</option>
                   <option value="accommodations">🏨 Accommodations</option>
                   <option value="nightlife">🎉 Nightlife</option>
+                </select>
+            </div>
+            <div class="mb-4 hidden" id="locationTypeContainer">
+                <label for="locationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select id="locationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                  <option value="restaurant">Restaurant</option>
+                  <option value="fast-food">Fast Food</option>
+                  <option value="food-truck">Food Truck</option>
+                  <option value="cafe">Cafe</option>
+                  <option value="bar">Bar</option>
+                  <option value="pub">Pub</option>
+                  <option value="rooftop-bar">Rooftop Bar</option>
+                  <option value="street-food">Street Food</option>
+                  <option value="brewery">Brewery</option>
+                  <option value="winery">Winery</option>
+                  <option value="seafood">Seafood</option>
+                  <option value="italian">Italian</option>
+                  <option value="american">American</option>
+                  <option value="wine-bar">Wine Bar</option>
+                  <option value="cocktail-bar">Cocktail Bar</option>
+                  <option value="dive-bar">Dive Bar</option>
+                  <option value="buffet">Buffet</option>
+                  <option value="bakery">Bakery</option>
+                  <option value="dessert">Dessert</option>
+                  <option value="ice-cream">Ice Cream</option>
+                  <option value="coffee-shop">Coffee Shop</option>
+                  <option value="tea-shop">Tea Shop</option>
+                  <option value="juice-bar">Juice Bar</option>
+                  <option value="smoothie-bar">Smoothie Bar</option>
+                  <option value="pizza">Pizza</option>
                 </select>
             </div>
             <div id="addMapsStatus" class="text-sm hidden"></div>
@@ -206,11 +236,41 @@
             </div>
             <div class="mb-4">
                 <label for="editLocationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select id="editLocationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                <select id="editLocationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleEditTypeField()">
                   <option value="attractions">🎯 Attractions</option>
                   <option value="dining">🍽️ Dining</option>
                   <option value="accommodations">🏨 Accommodations</option>
                   <option value="nightlife">🎉 Nightlife</option>
+                </select>
+            </div>
+            <div class="mb-4 hidden" id="editLocationTypeContainer">
+                <label for="editLocationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                <select id="editLocationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                  <option value="restaurant">Restaurant</option>
+                  <option value="fast-food">Fast Food</option>
+                  <option value="food-truck">Food Truck</option>
+                  <option value="cafe">Cafe</option>
+                  <option value="bar">Bar</option>
+                  <option value="pub">Pub</option>
+                  <option value="rooftop-bar">Rooftop Bar</option>
+                  <option value="street-food">Street Food</option>
+                  <option value="brewery">Brewery</option>
+                  <option value="winery">Winery</option>
+                  <option value="seafood">Seafood</option>
+                  <option value="italian">Italian</option>
+                  <option value="american">American</option>
+                  <option value="wine-bar">Wine Bar</option>
+                  <option value="cocktail-bar">Cocktail Bar</option>
+                  <option value="dive-bar">Dive Bar</option>
+                  <option value="buffet">Buffet</option>
+                  <option value="bakery">Bakery</option>
+                  <option value="dessert">Dessert</option>
+                  <option value="ice-cream">Ice Cream</option>
+                  <option value="coffee-shop">Coffee Shop</option>
+                  <option value="tea-shop">Tea Shop</option>
+                  <option value="juice-bar">Juice Bar</option>
+                  <option value="smoothie-bar">Smoothie Bar</option>
+                  <option value="pizza">Pizza</option>
                 </select>
             </div>
             <div id="editMapsStatus" class="text-sm hidden"></div>
@@ -315,13 +375,35 @@
             document.getElementById('locationName').value = '';
             document.getElementById('locationAddress').value = '';
             document.getElementById('locationCategory').value = 'attractions';
+            document.getElementById('locationType').value = 'restaurant';
             document.getElementById('addMapsStatus').classList.add('hidden');
             document.getElementById('submitMapsBtn').disabled = false;
             document.getElementById('submitMapsBtn').innerText = 'Save Location';
+            toggleTypeField(); // Set initial state
         }
 
         function closeAddMapsModal() {
             document.getElementById('addMapsModal').classList.add('hidden');
+        }
+
+        function toggleTypeField() {
+            const category = document.getElementById('locationCategory').value;
+            const typeContainer = document.getElementById('locationTypeContainer');
+            if (category === 'dining') {
+                typeContainer.classList.remove('hidden');
+            } else {
+                typeContainer.classList.add('hidden');
+            }
+        }
+
+        function toggleEditTypeField() {
+            const category = document.getElementById('editLocationCategory').value;
+            const typeContainer = document.getElementById('editLocationTypeContainer');
+            if (category === 'dining') {
+                typeContainer.classList.remove('hidden');
+            } else {
+                typeContainer.classList.add('hidden');
+            }
         }
 
         function openEditMapsModal(locationId, locationName) {
@@ -338,12 +420,14 @@
             document.getElementById('editLocationName').value = location.name;
             document.getElementById('editLocationAddress').value = location.address;
             document.getElementById('editLocationCategory').value = location.category || 'attractions';
+            document.getElementById('editLocationType').value = location.dining_type || 'restaurant';
 
             // Show modal
             document.getElementById('editMapsModal').classList.remove('hidden');
             document.getElementById('editMapsStatus').classList.add('hidden');
             document.getElementById('submitEditMapsBtn').disabled = false;
             document.getElementById('submitEditMapsBtn').innerText = 'Save Changes';
+            toggleEditTypeField(); // Set initial state based on current category
         }
 
         function closeEditMapsModal() {
@@ -355,6 +439,7 @@
             const name = document.getElementById('editLocationName').value;
             const address = document.getElementById('editLocationAddress').value;
             const category = document.getElementById('editLocationCategory').value;
+            const dining_type = category === 'dining' ? document.getElementById('editLocationType').value : null;
             const status = document.getElementById('editMapsStatus');
             const btn = document.getElementById('submitEditMapsBtn');
 
@@ -370,7 +455,7 @@
                 const res = await fetch('/api/update-maps', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: editingLocationId, name, address, category })
+                    body: JSON.stringify({ id: editingLocationId, name, address, category, dining_type })
                 });
 
                 const data = await res.json();
@@ -558,6 +643,7 @@
             const name = document.getElementById('locationName').value;
             const address = document.getElementById('locationAddress').value;
             const category = document.getElementById('locationCategory').value;
+            const dining_type = category === 'dining' ? document.getElementById('locationType').value : null;
             const status = document.getElementById('addMapsStatus');
             const btn = document.getElementById('submitMapsBtn');
 
@@ -573,7 +659,7 @@
                 const res = await fetch('/api/add-maps', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, address, category })
+                    body: JSON.stringify({ name, address, category, dining_type })
                 });
 
                 const data = await res.json();
@@ -828,6 +914,11 @@
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColor}">
                                             ${categoryIcon} ${categoryLabel}
                                         </span>
+                                        ${loc.category === 'dining' && loc.dining_type ? `
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-200 text-orange-900">
+                                                ${loc.dining_type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </span>
+                                        ` : ''}
                                         ${instagramCount > 0 ? `
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
                                                 ${instagramCount} Instagram

@@ -1,4 +1,4 @@
-import type { LocationCategory, LocationEntry } from "../models/location";
+import type { LocationCategory, LocationEntry, DiningType } from "../models/location";
 
 export function generateGoogleMapsUrl(name: string, address: string): string {
   const query = `${name} ${address}`;
@@ -55,7 +55,8 @@ export async function createFromMaps(
   name: string,
   address: string,
   apiKey?: string,
-  category: LocationCategory = "attractions"
+  category: LocationCategory = "attractions",
+  dining_type?: DiningType | null
 ): Promise<LocationEntry> {
   const url = generateGoogleMapsUrl(name, address);
   const entry: LocationEntry = {
@@ -71,6 +72,7 @@ export async function createFromMaps(
     parent_id: null,
     type: "maps",
     category,
+    dining_type,
   };
 
   try {

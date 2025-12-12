@@ -10,6 +10,7 @@ function mapRow(row: any): LocationEntry {
     parent_id: row.parent_id || null,
     type: row.type || "maps",
     category: row.category || "attractions",
+    dining_type: row.dining_type || null,
   };
 }
 
@@ -17,8 +18,8 @@ export function saveLocation(location: LocationEntry): number | boolean {
   try {
     const db = getDb();
     const query = db.query(`
-      INSERT INTO location (name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category)
-      VALUES ($name, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category)
+      INSERT INTO location (name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type)
+      VALUES ($name, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category, $dining_type)
       ON CONFLICT(name, address) DO UPDATE SET
         url = excluded.url,
         embed_code = excluded.embed_code,
@@ -30,6 +31,7 @@ export function saveLocation(location: LocationEntry): number | boolean {
         parent_id = excluded.parent_id,
         type = excluded.type,
         category = excluded.category,
+        dining_type = excluded.dining_type,
         created_at = CURRENT_TIMESTAMP
     `);
 
@@ -46,6 +48,7 @@ export function saveLocation(location: LocationEntry): number | boolean {
       $parent_id: location.parent_id || null,
       $type: location.type || "maps",
       $category: location.category || "attractions",
+      $dining_type: location.dining_type || null,
     });
 
     const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -74,6 +77,10 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
       setClause.push("category = $category");
       params.$category = updates.category;
     }
+    if (updates.dining_type !== undefined) {
+      setClause.push("dining_type = $dining_type");
+      params.$dining_type = updates.dining_type;
+    }
     if (updates.url !== undefined) {
       setClause.push("url = $url");
       params.$url = updates.url;
@@ -97,7 +104,7 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
       WHERE id = $id AND type = 'maps'
     `);
 
-    query.run(params);
+    (query as any).run(params);
     return true;
   } catch (error) {
     console.error("Error updating location:", error);
@@ -107,14 +114,14 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
 
 export function getAllLocations(): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category FROM location ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location ORDER BY created_at DESC");
   const rows = query.all() as any[];
   return rows.map(mapRow);
 }
 
 export function getLocationById(id: number): LocationEntry | null {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category FROM location WHERE id = $id");
+  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE id = $id");
   const row = query.get({ $id: id }) as any;
   if (!row) return null;
   return mapRow(row);
@@ -122,7 +129,7 @@ export function getLocationById(id: number): LocationEntry | null {
 
 export function getLocationsByParentId(parentId: number): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
   const rows = query.all({ $parentId: parentId }) as any[];
   return rows.map(mapRow);
 }

@@ -46,6 +46,7 @@ export function initDb() {
   addColumn("parent_id", "parent_id INTEGER");
   addColumn("type", "type TEXT DEFAULT 'maps'");
   addColumn("category", "category TEXT DEFAULT 'attractions'");
+  addColumn("dining_type", "dining_type TEXT");
 
   try {
     database.run("UPDATE location SET category = 'attractions' WHERE category IS NULL");

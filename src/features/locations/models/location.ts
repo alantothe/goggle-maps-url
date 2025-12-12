@@ -2,6 +2,33 @@ export type LocationCategory = 'dining' | 'accommodations' | 'attractions' | 'ni
 
 export type LocationType = 'maps' | 'instagram' | 'upload';
 
+export type DiningType =
+  | 'restaurant'
+  | 'fast-food'
+  | 'food-truck'
+  | 'cafe'
+  | 'bar'
+  | 'pub'
+  | 'rooftop-bar'
+  | 'street-food'
+  | 'brewery'
+  | 'winery'
+  | 'seafood'
+  | 'italian'
+  | 'american'
+  | 'wine-bar'
+  | 'cocktail-bar'
+  | 'dive-bar'
+  | 'buffet'
+  | 'bakery'
+  | 'dessert'
+  | 'ice-cream'
+  | 'coffee-shop'
+  | 'tea-shop'
+  | 'juice-bar'
+  | 'smoothie-bar'
+  | 'pizza';
+
 export interface LocationEntry {
   id?: number;
   name: string;
@@ -16,6 +43,7 @@ export interface LocationEntry {
   parent_id?: number | null;
   type?: LocationType;
   category?: LocationCategory;
+  dining_type?: DiningType | null;
 }
 
 export interface LocationWithChildren extends LocationEntry {
@@ -27,6 +55,7 @@ export interface CreateMapsRequest {
   name: string;
   address: string;
   category?: LocationCategory;
+  dining_type?: DiningType | null;
 }
 
 export interface UpdateMapsRequest {
@@ -34,6 +63,7 @@ export interface UpdateMapsRequest {
   name: string;
   address: string;
   category?: LocationCategory;
+  dining_type?: DiningType | null;
 }
 
 export interface AddInstagramRequest {
