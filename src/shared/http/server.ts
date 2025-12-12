@@ -1,4 +1,5 @@
-import { serve, Server } from "bun";
+import { serve } from "bun";
+import type { Server } from "bun";
 
 export interface RouteDefinition {
   method: string;
@@ -8,7 +9,7 @@ export interface RouteDefinition {
 
 interface ServerOptions {
   port?: number;
-  onStart?: (server: Server) => void;
+  onStart?: (server: Server<any>) => void;
 }
 
 export function pathMatcher(path: string) {

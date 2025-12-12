@@ -25,6 +25,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS location (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
+      title TEXT,
       address TEXT NOT NULL,
       url TEXT NOT NULL,
       embed_code TEXT,
@@ -47,6 +48,7 @@ export function initDb() {
   addColumn("type", "type TEXT DEFAULT 'maps'");
   addColumn("category", "category TEXT DEFAULT 'attractions'");
   addColumn("dining_type", "dining_type TEXT");
+  addColumn("title", "title TEXT");
 
   try {
     database.run("UPDATE location SET category = 'attractions' WHERE category IS NULL");

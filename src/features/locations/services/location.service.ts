@@ -47,19 +47,56 @@ export function listLocations(): LocationWithChildren[] {
 }
 
 export async function addMapsLocation(payload: CreateMapsRequest, apiKey?: string): Promise<LocationEntry> {
-  if (!payload.name || !payload.address) {
-    throw new Error("Name and Address required");
+  // Require title for basic location creation
+  if (!payload.title) {
+    throw new Error("Display Title required");
   }
 
   const category = payload.category && VALID_CATEGORIES.includes(payload.category) ? payload.category : "attractions";
-  const entry = await createFromMaps(payload.name, payload.address, apiKey, category, payload.dining_type);
+
+  let entry: LocationEntry;
+
+  // If name and address are provided, create with Google Maps integration
+  if (payload.name && payload.address) {
+    entry = await createFromMaps(payload.name, payload.address, apiKey, category, payload.dining_type);
+  } else {
+    // Create basic location without Google Maps integration
+    entry = {
+      name: payload.title, // Use title as name for basic locations
+      address: payload.contactAddress || "Address not provided",
+      url: "",
+      embed_code: undefined,
+      instagram: undefined,
+      images: [],
+      original_image_urls: [],
+      lat: null,
+      lng: null,
+      parent_id: null,
+      type: "maps",
+      category,
+      dining_type: payload.dining_type,
+    };
+  }
+
+  // Add contact information fields
+  entry.title = payload.title;
+  entry.contactAddress = payload.contactAddress;
+  entry.countryCode = payload.countryCode;
+  entry.phoneNumber = payload.phoneNumber;
+  entry.website = payload.website;
+
   saveLocation(entry);
   return entry;
 }
 
 export async function updateMapsLocation(payload: UpdateMapsRequest, apiKey?: string): Promise<LocationEntry> {
-  if (!payload.id || !payload.name || !payload.address) {
-    throw new Error("ID, Name and Address required");
+  if (!payload.id) {
+    throw new Error("ID required");
+  }
+
+  // Require title for location updates
+  if (!payload.title) {
+    throw new Error("Display Title required");
   }
 
   const currentLocation = getLocationById(payload.id);
@@ -68,30 +105,47 @@ export async function updateMapsLocation(payload: UpdateMapsRequest, apiKey?: st
   }
 
   const category = payload.category && VALID_CATEGORIES.includes(payload.category) ? payload.category : "attractions";
-  const newUrl = generateGoogleMapsUrl(payload.name, payload.address);
 
+  let newUrl = currentLocation.url;
   let lat = currentLocation.lat;
   let lng = currentLocation.lng;
-  if (apiKey && payload.address !== currentLocation.address) {
-    try {
-      const coords = await geocode(payload.address, apiKey);
-      if (coords) {
-        lat = coords.lat;
-        lng = coords.lng;
+  let name = payload.name || currentLocation.name;
+  let address = payload.address || currentLocation.address;
+
+  // If name and address are provided and different, update Google Maps integration
+  if (payload.name && payload.address) {
+    newUrl = generateGoogleMapsUrl(payload.name, payload.address);
+
+    if (apiKey && payload.address !== currentLocation.address) {
+      try {
+        const coords = await geocode(payload.address, apiKey);
+        if (coords) {
+          lat = coords.lat;
+          lng = coords.lng;
+        }
+      } catch (e) {
+        console.warn("Failed to geocode updated address:", e);
       }
-    } catch (e) {
-      console.warn("Failed to geocode updated address:", e);
     }
+  } else if (!payload.name && !payload.address) {
+    // If neither name nor address provided, keep current values
+    name = currentLocation.name;
+    address = currentLocation.address;
   }
 
   const success = updateLocationById(payload.id, {
-    name: payload.name,
-    address: payload.address,
+    name,
+    title: payload.title,
+    address,
     category,
     dining_type: payload.dining_type,
     url: newUrl,
     lat,
     lng,
+    contactAddress: payload.contactAddress,
+    countryCode: payload.countryCode,
+    phoneNumber: payload.phoneNumber,
+    website: payload.website,
   });
 
   if (!success) {
@@ -146,7 +200,7 @@ export async function addInstagramEmbed(payload: AddInstagramRequest): Promise<L
       body: JSON.stringify({ url: instaUrl }),
     });
 
-    const data = await apiResponse.json();
+    const data: any = await apiResponse.json();
     const imageUrls: string[] = [];
 
     const getBestUrl = (candidates: Array<{ url: string }> | undefined) => {
@@ -154,7 +208,7 @@ export async function addInstagramEmbed(payload: AddInstagramRequest): Promise<L
       return candidates[0].url;
     };
 
-    if (data.media) {
+    if (data && data.media) {
       if (data.media.carousel_media) {
         data.media.carousel_media.forEach((item: any) => {
           if (item.image_versions2 && item.image_versions2.candidates) {
@@ -172,7 +226,7 @@ export async function addInstagramEmbed(payload: AddInstagramRequest): Promise<L
       data.forEach((item: any) => {
         if (item.pictureUrl) imageUrls.push(item.pictureUrl);
       });
-    } else if (imageUrls.length === 0 && data.pictureUrl) {
+    } else if (imageUrls.length === 0 && data && data.pictureUrl) {
       imageUrls.push(data.pictureUrl);
     }
 
@@ -186,7 +240,7 @@ export async function addInstagramEmbed(payload: AddInstagramRequest): Promise<L
       for (let i = 0; i < imageUrls.length; i++) {
         const imgUrl = imageUrls[i];
         try {
-          const imgRes = await fetch(imgUrl);
+          const imgRes = await fetch(imgUrl!);
           if (!imgRes.ok) throw new Error(`Failed to fetch ${imgUrl}`);
 
           const filename = `image_${i}.jpg`;

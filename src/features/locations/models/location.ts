@@ -32,6 +32,7 @@ export type DiningType =
 export interface LocationEntry {
   id?: number;
   name: string;
+  title?: string | null;
   address: string;
   url: string;
   embed_code?: string | null;
@@ -44,6 +45,11 @@ export interface LocationEntry {
   type?: LocationType;
   category?: LocationCategory;
   dining_type?: DiningType | null;
+  // Contact Information fields
+  contactAddress?: string | null;
+  countryCode?: string | null;
+  phoneNumber?: string | null;
+  website?: string | null;
 }
 
 export interface LocationWithChildren extends LocationEntry {
@@ -53,17 +59,27 @@ export interface LocationWithChildren extends LocationEntry {
 
 export interface CreateMapsRequest {
   name: string;
+  title?: string | null;
   address: string;
   category?: LocationCategory;
   dining_type?: DiningType | null;
+  contactAddress?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  website?: string;
 }
 
 export interface UpdateMapsRequest {
   id: number;
   name: string;
+  title?: string | null;
   address: string;
   category?: LocationCategory;
   dining_type?: DiningType | null;
+  contactAddress?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  website?: string;
 }
 
 export interface AddInstagramRequest {

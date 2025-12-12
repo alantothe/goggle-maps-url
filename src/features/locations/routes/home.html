@@ -155,53 +155,103 @@
         
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Add New Google Maps Location</h3>
-            <div class="mb-4">
-                <label for="locationName" class="block text-sm font-medium text-gray-700 mb-2">Location Name</label>
-                <input type="text" id="locationName" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. Eiffel Tower">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Add New Location</h3>
+
+            <!-- Primary Information Section -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Location Details</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="locationTitle" class="block text-sm font-medium text-gray-700 mb-2">Display Title</label>
+                        <input type="text" id="locationTitle" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. The Iconic Eiffel Tower">
+                        <p class="text-xs text-gray-500 mt-1">Primary name that will be displayed</p>
+                    </div>
+                    <div>
+                        <label for="locationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="locationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleTypeField()">
+                          <option value="attractions">🎯 Attractions</option>
+                          <option value="dining">🍽️ Dining</option>
+                          <option value="accommodations">🏨 Accommodations</option>
+                          <option value="nightlife">🎉 Nightlife</option>
+                        </select>
+                    </div>
+                    <div class="hidden" id="locationTypeContainer">
+                        <label for="locationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <select id="locationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                          <option value="restaurant">Restaurant</option>
+                          <option value="fast-food">Fast Food</option>
+                          <option value="food-truck">Food Truck</option>
+                          <option value="cafe">Cafe</option>
+                          <option value="bar">Bar</option>
+                          <option value="pub">Pub</option>
+                          <option value="rooftop-bar">Rooftop Bar</option>
+                          <option value="street-food">Street Food</option>
+                          <option value="brewery">Brewery</option>
+                          <option value="winery">Winery</option>
+                          <option value="seafood">Seafood</option>
+                          <option value="italian">Italian</option>
+                          <option value="american">American</option>
+                          <option value="wine-bar">Wine Bar</option>
+                          <option value="cocktail-bar">Cocktail Bar</option>
+                          <option value="dive-bar">Dive Bar</option>
+                          <option value="buffet">Buffet</option>
+                          <option value="bakery">Bakery</option>
+                          <option value="dessert">Dessert</option>
+                          <option value="ice-cream">Ice Cream</option>
+                          <option value="coffee-shop">Coffee Shop</option>
+                          <option value="tea-shop">Tea Shop</option>
+                          <option value="juice-bar">Juice Bar</option>
+                          <option value="smoothie-bar">Smoothie Bar</option>
+                          <option value="pizza">Pizza</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-             <div class="mb-4">
-                <label for="locationAddress" class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
-                <input type="text" id="locationAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. Champ de Mars, 5 Av. Anatole France, 75007 Paris, France">
+
+            <!-- Contact Information Section -->
+            <div class="mb-6 border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="contactAddress" class="block text-sm font-medium text-gray-700 mb-2">Contact Address</label>
+                        <input type="text" id="contactAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Physical address or Google Maps URL">
+                        <p class="text-xs text-gray-500 mt-1">Address for customer contact and directions</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="countryCode" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <select id="countryCode" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                                <option value="">Select Country</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="phoneNumber" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <input type="text" id="phoneNumber" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Contact phone number">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                        <input type="url" id="website" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="https://example.com">
+                    </div>
+                </div>
             </div>
-            <div class="mb-4">
-                <label for="locationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select id="locationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleTypeField()">
-                  <option value="attractions">🎯 Attractions</option>
-                  <option value="dining">🍽️ Dining</option>
-                  <option value="accommodations">🏨 Accommodations</option>
-                  <option value="nightlife">🎉 Nightlife</option>
-                </select>
-            </div>
-            <div class="mb-4 hidden" id="locationTypeContainer">
-                <label for="locationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                <select id="locationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
-                  <option value="restaurant">Restaurant</option>
-                  <option value="fast-food">Fast Food</option>
-                  <option value="food-truck">Food Truck</option>
-                  <option value="cafe">Cafe</option>
-                  <option value="bar">Bar</option>
-                  <option value="pub">Pub</option>
-                  <option value="rooftop-bar">Rooftop Bar</option>
-                  <option value="street-food">Street Food</option>
-                  <option value="brewery">Brewery</option>
-                  <option value="winery">Winery</option>
-                  <option value="seafood">Seafood</option>
-                  <option value="italian">Italian</option>
-                  <option value="american">American</option>
-                  <option value="wine-bar">Wine Bar</option>
-                  <option value="cocktail-bar">Cocktail Bar</option>
-                  <option value="dive-bar">Dive Bar</option>
-                  <option value="buffet">Buffet</option>
-                  <option value="bakery">Bakery</option>
-                  <option value="dessert">Dessert</option>
-                  <option value="ice-cream">Ice Cream</option>
-                  <option value="coffee-shop">Coffee Shop</option>
-                  <option value="tea-shop">Tea Shop</option>
-                  <option value="juice-bar">Juice Bar</option>
-                  <option value="smoothie-bar">Smoothie Bar</option>
-                  <option value="pizza">Pizza</option>
-                </select>
+
+            <!-- Google Maps Integration Section -->
+            <div class="mb-4 border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Google Maps Integration</h4>
+                <p class="text-xs text-gray-500 mb-3">Optional: Provide location details to generate Google Maps links and coordinates</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="locationName" class="block text-sm font-medium text-gray-700 mb-2">Location Name</label>
+                        <input type="text" id="locationName" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. Eiffel Tower">
+                        <p class="text-xs text-gray-500 mt-1">Official name used for Google Maps search</p>
+                    </div>
+                    <div>
+                        <label for="locationAddress" class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
+                        <input type="text" id="locationAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. Champ de Mars, 5 Av. Anatole France, 75007 Paris, France">
+                        <p class="text-xs text-gray-500 mt-1">Complete address for precise location lookup</p>
+                    </div>
+                </div>
             </div>
             <div id="addMapsStatus" class="text-sm hidden"></div>
           </div>
@@ -226,52 +276,102 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Edit Location</h3>
-            <div class="mb-4">
-                <label for="editLocationName" class="block text-sm font-medium text-gray-700 mb-2">Location Name</label>
-                <input type="text" id="editLocationName" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+
+            <!-- Primary Information Section -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Location Details</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="editLocationTitle" class="block text-sm font-medium text-gray-700 mb-2">Display Title</label>
+                        <input type="text" id="editLocationTitle" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="e.g. The Iconic Eiffel Tower">
+                        <p class="text-xs text-gray-500 mt-1">Primary name that will be displayed</p>
+                    </div>
+                    <div>
+                        <label for="editLocationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                        <select id="editLocationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleEditTypeField()">
+                          <option value="attractions">🎯 Attractions</option>
+                          <option value="dining">🍽️ Dining</option>
+                          <option value="accommodations">🏨 Accommodations</option>
+                          <option value="nightlife">🎉 Nightlife</option>
+                        </select>
+                    </div>
+                    <div class="hidden" id="editLocationTypeContainer">
+                        <label for="editLocationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <select id="editLocationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                          <option value="restaurant">Restaurant</option>
+                          <option value="fast-food">Fast Food</option>
+                          <option value="food-truck">Food Truck</option>
+                          <option value="cafe">Cafe</option>
+                          <option value="bar">Bar</option>
+                          <option value="pub">Pub</option>
+                          <option value="rooftop-bar">Rooftop Bar</option>
+                          <option value="street-food">Street Food</option>
+                          <option value="brewery">Brewery</option>
+                          <option value="winery">Winery</option>
+                          <option value="seafood">Seafood</option>
+                          <option value="italian">Italian</option>
+                          <option value="american">American</option>
+                          <option value="wine-bar">Wine Bar</option>
+                          <option value="cocktail-bar">Cocktail Bar</option>
+                          <option value="dive-bar">Dive Bar</option>
+                          <option value="buffet">Buffet</option>
+                          <option value="bakery">Bakery</option>
+                          <option value="dessert">Dessert</option>
+                          <option value="ice-cream">Ice Cream</option>
+                          <option value="coffee-shop">Coffee Shop</option>
+                          <option value="tea-shop">Tea Shop</option>
+                          <option value="juice-bar">Juice Bar</option>
+                          <option value="smoothie-bar">Smoothie Bar</option>
+                          <option value="pizza">Pizza</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-             <div class="mb-4">
-                <label for="editLocationAddress" class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
-                <input type="text" id="editLocationAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+
+            <!-- Contact Information Section -->
+            <div class="mb-6 border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label for="editContactAddress" class="block text-sm font-medium text-gray-700 mb-2">Contact Address</label>
+                        <input type="text" id="editContactAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Physical address or Google Maps URL">
+                        <p class="text-xs text-gray-500 mt-1">Address for customer contact and directions</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="editCountryCode" class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                            <select id="editCountryCode" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                                <option value="">Select Country</option>
+                            </select>
+                        </div>
+                        <div class="col-span-2">
+                            <label for="editPhoneNumber" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                            <input type="text" id="editPhoneNumber" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="Contact phone number">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="editWebsite" class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                        <input type="url" id="editWebsite" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="https://example.com">
+                    </div>
+                </div>
             </div>
-            <div class="mb-4">
-                <label for="editLocationCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <select id="editLocationCategory" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" onchange="toggleEditTypeField()">
-                  <option value="attractions">🎯 Attractions</option>
-                  <option value="dining">🍽️ Dining</option>
-                  <option value="accommodations">🏨 Accommodations</option>
-                  <option value="nightlife">🎉 Nightlife</option>
-                </select>
-            </div>
-            <div class="mb-4 hidden" id="editLocationTypeContainer">
-                <label for="editLocationType" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                <select id="editLocationType" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
-                  <option value="restaurant">Restaurant</option>
-                  <option value="fast-food">Fast Food</option>
-                  <option value="food-truck">Food Truck</option>
-                  <option value="cafe">Cafe</option>
-                  <option value="bar">Bar</option>
-                  <option value="pub">Pub</option>
-                  <option value="rooftop-bar">Rooftop Bar</option>
-                  <option value="street-food">Street Food</option>
-                  <option value="brewery">Brewery</option>
-                  <option value="winery">Winery</option>
-                  <option value="seafood">Seafood</option>
-                  <option value="italian">Italian</option>
-                  <option value="american">American</option>
-                  <option value="wine-bar">Wine Bar</option>
-                  <option value="cocktail-bar">Cocktail Bar</option>
-                  <option value="dive-bar">Dive Bar</option>
-                  <option value="buffet">Buffet</option>
-                  <option value="bakery">Bakery</option>
-                  <option value="dessert">Dessert</option>
-                  <option value="ice-cream">Ice Cream</option>
-                  <option value="coffee-shop">Coffee Shop</option>
-                  <option value="tea-shop">Tea Shop</option>
-                  <option value="juice-bar">Juice Bar</option>
-                  <option value="smoothie-bar">Smoothie Bar</option>
-                  <option value="pizza">Pizza</option>
-                </select>
+
+            <!-- Google Maps Integration Section -->
+            <div class="mb-4 border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Google Maps Integration</h4>
+                <p class="text-xs text-gray-500 mb-3">Optional: Provide location details to generate Google Maps links and coordinates</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="editLocationName" class="block text-sm font-medium text-gray-700 mb-2">Location Name</label>
+                        <input type="text" id="editLocationName" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                        <p class="text-xs text-gray-500 mt-1">Official name used for Google Maps search</p>
+                    </div>
+                    <div>
+                        <label for="editLocationAddress" class="block text-sm font-medium text-gray-700 mb-2">Full Address</label>
+                        <input type="text" id="editLocationAddress" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border">
+                        <p class="text-xs text-gray-500 mt-1">Complete address for precise location lookup</p>
+                    </div>
+                </div>
             </div>
             <div id="editMapsStatus" class="text-sm hidden"></div>
           </div>
@@ -373,12 +473,17 @@
         function openAddMapsModal() {
             document.getElementById('addMapsModal').classList.remove('hidden');
             document.getElementById('locationName').value = '';
+            document.getElementById('locationTitle').value = '';
             document.getElementById('locationAddress').value = '';
             document.getElementById('locationCategory').value = 'attractions';
             document.getElementById('locationType').value = 'restaurant';
+            document.getElementById('contactAddress').value = '';
+            document.getElementById('phoneNumber').value = '';
+            document.getElementById('website').value = '';
             document.getElementById('addMapsStatus').classList.add('hidden');
             document.getElementById('submitMapsBtn').disabled = false;
             document.getElementById('submitMapsBtn').innerText = 'Save Location';
+            initializeCountryDropdown('countryCode', '');
             toggleTypeField(); // Set initial state
         }
 
@@ -418,9 +523,18 @@
 
             // Populate form with current values
             document.getElementById('editLocationName').value = location.name;
+            document.getElementById('editLocationTitle').value = location.title || '';
             document.getElementById('editLocationAddress').value = location.address;
             document.getElementById('editLocationCategory').value = location.category || 'attractions';
             document.getElementById('editLocationType').value = location.dining_type || 'restaurant';
+
+            // Populate contact information fields
+            document.getElementById('editContactAddress').value = location.contactAddress || '';
+            document.getElementById('editPhoneNumber').value = location.phoneNumber || '';
+            document.getElementById('editWebsite').value = location.website || '';
+
+            // Initialize country dropdown and set selected value
+            initializeCountryDropdown('editCountryCode', location.countryCode || '');
 
             // Show modal
             document.getElementById('editMapsModal').classList.remove('hidden');
@@ -436,14 +550,22 @@
         }
 
         async function submitEditMaps() {
-            const name = document.getElementById('editLocationName').value;
-            const address = document.getElementById('editLocationAddress').value;
+            const name = document.getElementById('editLocationName').value.trim();
+            const title = document.getElementById('editLocationTitle').value.trim();
+            const address = document.getElementById('editLocationAddress').value.trim();
             const category = document.getElementById('editLocationCategory').value;
             const dining_type = category === 'dining' ? document.getElementById('editLocationType').value : null;
+            const contactAddress = document.getElementById('editContactAddress').value.trim();
+            const countryCode = document.getElementById('editCountryCode').value;
+            const phoneNumber = document.getElementById('editPhoneNumber').value.trim();
+            const website = document.getElementById('editWebsite').value.trim();
             const status = document.getElementById('editMapsStatus');
             const btn = document.getElementById('submitEditMapsBtn');
 
-            if (!name || !address || !editingLocationId) return;
+            if (!title || !editingLocationId) {
+                alert('Please provide a Display Title');
+                return;
+            }
 
             btn.disabled = true;
             btn.innerText = 'Saving...';
@@ -455,7 +577,18 @@
                 const res = await fetch('/api/update-maps', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: editingLocationId, name, address, category, dining_type })
+                    body: JSON.stringify({
+                        id: editingLocationId,
+                        name,
+                        title: title || null,
+                        address,
+                        category,
+                        dining_type,
+                        contactAddress: contactAddress || null,
+                        countryCode: countryCode || null,
+                        phoneNumber: phoneNumber || null,
+                        website: website || null
+                    })
                 });
 
                 const data = await res.json();
@@ -640,14 +773,23 @@
         }
 
         async function submitMaps() {
-            const name = document.getElementById('locationName').value;
-            const address = document.getElementById('locationAddress').value;
+            const name = document.getElementById('locationName').value.trim();
+            const title = document.getElementById('locationTitle').value.trim();
+            const address = document.getElementById('locationAddress').value.trim();
             const category = document.getElementById('locationCategory').value;
             const dining_type = category === 'dining' ? document.getElementById('locationType').value : null;
+            const contactAddress = document.getElementById('contactAddress').value.trim();
+            const countryCode = document.getElementById('countryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const website = document.getElementById('website').value.trim();
             const status = document.getElementById('addMapsStatus');
             const btn = document.getElementById('submitMapsBtn');
 
-            if (!name || !address) return;
+            // Require at least a title for basic location creation
+            if (!title) {
+                alert('Please provide a Display Title');
+                return;
+            }
 
             btn.disabled = true;
             btn.innerText = 'Saving...';
@@ -659,7 +801,17 @@
                 const res = await fetch('/api/add-maps', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, address, category, dining_type })
+                    body: JSON.stringify({
+                        name,
+                        title: title || null,
+                        address,
+                        category,
+                        dining_type,
+                        contactAddress: contactAddress || null,
+                        countryCode: countryCode || null,
+                        phoneNumber: phoneNumber || null,
+                        website: website || null
+                    })
                 });
 
                 const data = await res.json();
@@ -910,7 +1062,7 @@
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(loc.name)}</h3>
+                                        <h3 class="text-lg font-semibold text-gray-900">${escapeHtml(loc.title || loc.name)}</h3>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColor}">
                                             ${categoryIcon} ${categoryLabel}
                                         </span>
@@ -1123,6 +1275,55 @@
             // Try to download the image on drop if supported (Chrome/Edge)
             const fileName = url.split('/').pop();
             e.dataTransfer.setData('DownloadURL', `image/jpeg:${fileName}:${url}`);
+        }
+
+        function initializeCountryDropdown(dropdownId, selectedValue = '') {
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+
+            // Clear existing options except the first one
+            dropdown.innerHTML = '<option value="">Select Country</option>';
+
+            // Add country options
+            const countries = [
+                { code: 'US', name: 'United States', flag: '🇺🇸', dialCode: '+1' },
+                { code: 'CA', name: 'Canada', flag: '🇨🇦', dialCode: '+1' },
+                { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', dialCode: '+44' },
+                { code: 'AU', name: 'Australia', flag: '🇦🇺', dialCode: '+61' },
+                { code: 'DE', name: 'Germany', flag: '🇩🇪', dialCode: '+49' },
+                { code: 'FR', name: 'France', flag: '🇫🇷', dialCode: '+33' },
+                { code: 'IT', name: 'Italy', flag: '🇮🇹', dialCode: '+39' },
+                { code: 'ES', name: 'Spain', flag: '🇪🇸', dialCode: '+34' },
+                { code: 'JP', name: 'Japan', flag: '🇯🇵', dialCode: '+81' },
+                { code: 'KR', name: 'South Korea', flag: '🇰🇷', dialCode: '+82' },
+                { code: 'CN', name: 'China', flag: '🇨🇳', dialCode: '+86' },
+                { code: 'IN', name: 'India', flag: '🇮🇳', dialCode: '+91' },
+                { code: 'BR', name: 'Brazil', flag: '🇧🇷', dialCode: '+55' },
+                { code: 'MX', name: 'Mexico', flag: '🇲🇽', dialCode: '+52' },
+                { code: 'AR', name: 'Argentina', flag: '🇦🇷', dialCode: '+54' },
+                { code: 'CL', name: 'Chile', flag: '🇨🇱', dialCode: '+56' },
+                { code: 'CO', name: 'Colombia', flag: '🇨🇴', dialCode: '+57' },
+                { code: 'PE', name: 'Peru', flag: '🇵🇪', dialCode: '+51' },
+                { code: 'VE', name: 'Venezuela', flag: '🇻🇪', dialCode: '+58' },
+                { code: 'UY', name: 'Uruguay', flag: '🇺🇾', dialCode: '+598' },
+                { code: 'PY', name: 'Paraguay', flag: '🇵🇾', dialCode: '+595' },
+                { code: 'BO', name: 'Bolivia', flag: '🇧🇴', dialCode: '+591' },
+                { code: 'EC', name: 'Ecuador', flag: '🇪🇶', dialCode: '+593' },
+            ];
+
+            // Sort countries by name
+            countries.sort((a, b) => a.name.localeCompare(b.name));
+
+            // Add all countries
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = `${country.flag} ${country.name} (${country.dialCode})`;
+                if (country.code === selectedValue) {
+                    option.selected = true;
+                }
+                dropdown.appendChild(option);
+            });
         }
 
         function escapeHtml(text) {

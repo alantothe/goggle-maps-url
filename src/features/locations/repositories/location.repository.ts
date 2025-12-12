@@ -18,9 +18,10 @@ export function saveLocation(location: LocationEntry): number | boolean {
   try {
     const db = getDb();
     const query = db.query(`
-      INSERT INTO location (name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type)
-      VALUES ($name, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category, $dining_type)
+      INSERT INTO location (name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type)
+      VALUES ($name, $title, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category, $dining_type)
       ON CONFLICT(name, address) DO UPDATE SET
+        title = excluded.title,
         url = excluded.url,
         embed_code = excluded.embed_code,
         instagram = excluded.instagram,
@@ -37,6 +38,7 @@ export function saveLocation(location: LocationEntry): number | boolean {
 
     query.run({
       $name: location.name,
+      $title: location.title || null,
       $address: location.address,
       $url: location.url,
       $embed_code: location.embed_code || null,
@@ -68,6 +70,10 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
     if (updates.name !== undefined) {
       setClause.push("name = $name");
       params.$name = updates.name;
+    }
+    if (updates.title !== undefined) {
+      setClause.push("title = $title");
+      params.$title = updates.title;
     }
     if (updates.address !== undefined) {
       setClause.push("address = $address");
@@ -114,14 +120,14 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
 
 export function getAllLocations(): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location ORDER BY created_at DESC");
   const rows = query.all() as any[];
   return rows.map(mapRow);
 }
 
 export function getLocationById(id: number): LocationEntry | null {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE id = $id");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE id = $id");
   const row = query.get({ $id: id }) as any;
   if (!row) return null;
   return mapRow(row);
@@ -129,7 +135,7 @@ export function getLocationById(id: number): LocationEntry | null {
 
 export function getLocationsByParentId(parentId: number): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
   const rows = query.all({ $parentId: parentId }) as any[];
   return rows.map(mapRow);
 }

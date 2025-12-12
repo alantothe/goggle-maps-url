@@ -41,6 +41,10 @@ export function getLocations() {
 export async function postAddMaps(req: Request) {
   try {
     const body = (await req.json()) as CreateMapsRequest;
+    // Validate that at least title is provided
+    if (!body.title) {
+      return errorResponse("Display Title is required", 400);
+    }
     const entry = await addMapsLocation(body, GOOGLE_MAPS_API_KEY);
     return jsonResponse({ success: true, entry });
   } catch (error: any) {
@@ -54,6 +58,13 @@ export async function postAddMaps(req: Request) {
 export async function postUpdateMaps(req: Request) {
   try {
     const body = (await req.json()) as UpdateMapsRequest;
+    // Validate required fields
+    if (!body.id) {
+      return errorResponse("Location ID is required", 400);
+    }
+    if (!body.title) {
+      return errorResponse("Display Title is required", 400);
+    }
     const entry = await updateMapsLocation(body, GOOGLE_MAPS_API_KEY);
     return jsonResponse({ success: true, entry });
   } catch (error: any) {
@@ -82,7 +93,7 @@ export async function postAddUpload(req: Request) {
     const formData = await req.formData();
     const idRaw = formData.get("locationId") || formData.get("parentId");
     const parentId = typeof idRaw === "string" ? Number(idRaw) : Number(idRaw?.toString());
-    const files = formData.getAll("files").filter((f): f is File => f instanceof File);
+    const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
     const entry = await addUploadFiles(parentId, files);
     return jsonResponse({ success: true, entry });
   } catch (error: any) {
