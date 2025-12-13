@@ -39,6 +39,18 @@ export function initDb() {
     )
   `);
 
+  // Create location taxonomy table for hierarchical location data
+  database.run(`
+    CREATE TABLE IF NOT EXISTS location_taxonomy (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      country TEXT NOT NULL,
+      city TEXT,
+      neighborhood TEXT,
+      location_key TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   addColumn("images", "images TEXT");
   addColumn("lat", "lat REAL");
   addColumn("lng", "lng REAL");
@@ -49,6 +61,7 @@ export function initDb() {
   addColumn("category", "category TEXT DEFAULT 'attractions'");
   addColumn("dining_type", "dining_type TEXT");
   addColumn("title", "title TEXT");
+  addColumn("location_key", "location_key TEXT");
 
   try {
     database.run("UPDATE location SET category = 'attractions' WHERE category IS NULL");

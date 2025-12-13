@@ -1,5 +1,4 @@
 import { jsonResponse, errorResponse } from "../../../shared/http/responses";
-import { locationsHtmlTemplate } from "../routes/home.template";
 import {
   addInstagramEmbed,
   addMapsLocation,
@@ -11,12 +10,6 @@ import {
 import type { CreateMapsRequest, UpdateMapsRequest } from "../models/location";
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
-
-export function serveHome() {
-  return new Response(locationsHtmlTemplate, {
-    headers: { "Content-Type": "text/html" },
-  });
-}
 
 export function serveImage(pathname: string) {
   const filePath = "." + pathname;

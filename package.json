@@ -3,7 +3,9 @@
   "module": "src/server/main.ts",
   "type": "module",
   "scripts": {
-    "start": "bun run src/server/main.ts"
+    "start": "bun run src/server/main.ts",
+    "seed:locations": "bun run src/features/locations/scripts/seed-locations.ts",
+    "test:locations": "bun run src/features/locations/scripts/test-location-utils.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

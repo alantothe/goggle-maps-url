@@ -2,6 +2,32 @@ export type LocationCategory = 'dining' | 'accommodations' | 'attractions' | 'ni
 
 export type LocationType = 'maps' | 'instagram' | 'upload';
 
+// Hierarchical Location Taxonomy Types
+export interface NeighborhoodData {
+  label: string;
+  value: string;
+}
+
+export interface CityData {
+  label: string;
+  value: string;
+  neighborhoods: NeighborhoodData[];
+}
+
+export interface CountryData {
+  code: string;
+  label: string;
+  cities: CityData[];
+}
+
+export interface LocationTaxonomy {
+  id?: number;
+  country: string;
+  city: string | null;
+  neighborhood: string | null;
+  locationKey: string; // Pipe-delimited: "colombia|bogota|chapinero"
+}
+
 export type DiningType =
   | 'restaurant'
   | 'fast-food'
@@ -50,6 +76,8 @@ export interface LocationEntry {
   countryCode?: string | null;
   phoneNumber?: string | null;
   website?: string | null;
+  // Hierarchical Location Taxonomy
+  locationKey?: string | null; // Pipe-delimited location key
 }
 
 export interface LocationWithChildren extends LocationEntry {
