@@ -20,7 +20,7 @@ export interface CountryData {
   cities: CityData[];
 }
 
-export interface LocationTaxonomy {
+export interface LocationHierarchy {
   id?: number;
   country: string;
   city: string | null;
@@ -95,6 +95,7 @@ export interface CreateMapsRequest {
   countryCode?: string;
   phoneNumber?: string;
   website?: string;
+   locationKey?: string | null;
 }
 
 export interface UpdateMapsRequest {
@@ -108,6 +109,7 @@ export interface UpdateMapsRequest {
   countryCode?: string;
   phoneNumber?: string;
   website?: string;
+  locationKey?: string | null;
 }
 
 export interface AddInstagramRequest {

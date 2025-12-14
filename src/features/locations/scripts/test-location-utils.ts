@@ -12,7 +12,7 @@ import {
   isLocationInScope
 } from '../utils/location-utils';
 
-console.log('🧪 Testing Location Taxonomy Utilities\n');
+console.log("🧪 Testing Location Hierarchy Utilities\n");
 
 // Test data generation
 console.log('1. 📊 Generated Location Combinations:');

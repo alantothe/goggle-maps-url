@@ -3,13 +3,13 @@
 import { getDb, initDb } from '../../../shared/db/client';
 import { countries } from '../../../data/locations';
 import { generateLocationCombinations } from '../utils/location-utils';
-import type { LocationTaxonomy } from '../models/location';
+import type { LocationHierarchy } from '../models/location';
 
 /**
- * Seed the location taxonomy table with hierarchical location data
+ * Seed the location hierarchy table with hierarchical location data
  */
-function seedLocationTaxonomy(): void {
-  console.log('🌱 Seeding location taxonomy...');
+function seedLocationHierarchy(): void {
+  console.log("🌱 Seeding location hierarchy...");
 
   // Initialize database schema
   initDb();
@@ -40,13 +40,13 @@ function seedLocationTaxonomy(): void {
     }
   });
 
-  console.log('✅ Location taxonomy seeded successfully!');
+  console.log("✅ Location hierarchy seeded successfully!");
 }
 
 /**
- * Get all location taxonomy entries from database
+ * Get all location hierarchy entries from database
  */
-function getAllLocationTaxonomy(): LocationTaxonomy[] {
+function getAllLocationHierarchy(): LocationHierarchy[] {
   const db = getDb();
   const query = db.query(`
     SELECT id, country, city, neighborhood, location_key as locationKey
@@ -54,7 +54,7 @@ function getAllLocationTaxonomy(): LocationTaxonomy[] {
     ORDER BY location_key
   `);
 
-  return query.all() as LocationTaxonomy[];
+  return query.all() as LocationHierarchy[];
 }
 
 /**
@@ -62,7 +62,7 @@ function getAllLocationTaxonomy(): LocationTaxonomy[] {
  */
 function displaySeededLocations(): void {
   console.log('\n📋 Seeded Locations:');
-  const locations = getAllLocationTaxonomy();
+  const locations = getAllLocationHierarchy();
 
   locations.forEach(location => {
     const displayName = location.locationKey.split('|').map(part =>
@@ -80,7 +80,7 @@ function displaySeededLocations(): void {
 // Run the seed script
 if (import.meta.main) {
   try {
-    seedLocationTaxonomy();
+    seedLocationHierarchy();
     displaySeededLocations();
     console.log('\n🎉 Location seeding complete!');
   } catch (error) {
@@ -89,4 +89,4 @@ if (import.meta.main) {
   }
 }
 
-export { seedLocationTaxonomy, getAllLocationTaxonomy };
+export { seedLocationHierarchy, getAllLocationHierarchy };

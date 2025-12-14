@@ -1,6 +1,6 @@
-# Location Taxonomy System
+# Location Hierarchy System
 
-This feature implements a hierarchical location taxonomy system using pipe-delimited string storage for country → city → neighborhood relationships.
+This feature implements a location hierarchy using pipe-delimited string storage for country → city → neighborhood relationships.
 
 ## Overview
 
@@ -75,11 +75,11 @@ const inScope = isLocationInScope('colombia|bogota|chapinero', 'colombia|bogota'
 ### Using Repositories
 
 ```typescript
-import { getAllLocationTaxonomy, getCitiesByCountry } from './repositories/location-taxonomy.repository';
+import { getAllLocationHierarchy, getCitiesByCountry } from "./repositories/location-hierarchy.repository";
 import { getLocationsInScope } from './repositories/location.repository';
 
-// Get all taxonomy entries
-const allLocations = getAllLocationTaxonomy();
+// Get all hierarchy entries
+const allLocations = getAllLocationHierarchy();
 
 // Get cities for a country
 const cities = getCitiesByCountry('colombia');

@@ -1,21 +1,23 @@
 import { initDb } from "../shared/db/client";
-import { startHttpServer } from "../shared/http/server";
-import { getLocationRoutes } from "../features/locations/routes/location.routes";
+import { app } from "../shared/http/server";
+import "../features/locations/routes/location.routes";
 
 export function startServer(port = Number(process.env.PORT || 3000)) {
   initDb();
 
-  const routes = getLocationRoutes();
+  // Routes are now defined directly in the app via imports
+  // No need to collect routes separately
 
-  return startHttpServer(routes, {
+  console.log(`\nServer running at http://localhost:${port}`);
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    console.log("⚠️  GOOGLE_MAPS_API_KEY is not set. Geocoding will be skipped.");
+  }
+  console.log("Press Ctrl+C to stop the server.");
+
+  // Use Bun's serve with Hono app
+  return Bun.serve({
     port,
-    onStart(server) {
-      console.log(`\n🚀 API Server running at http://localhost:${server.port}`);
-      if (!process.env.GOOGLE_MAPS_API_KEY) {
-        console.log("⚠️  GOOGLE_MAPS_API_KEY is not set. Geocoding will be skipped.");
-      }
-      console.log("Press Ctrl+C to stop the server.");
-    },
+    fetch: app.fetch,
   });
 }
 

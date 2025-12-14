@@ -1,4 +1,4 @@
-import { countryCodes } from "../../shared/utils/country-codes";
+import { countryCodes } from "../../../shared/utils/country-codes";
 
 export const contactInformationFields = [
   {
@@ -51,21 +51,3 @@ export const contactInformationFields = [
   },
 ];
 
-// Helper function to get country code options formatted for UI
-export function getCountryCodeOptions() {
-  return countryCodes.map(country => ({
-    label: `${country.flag} ${country.name} (${country.dialCode})`,
-    value: country.code,
-  }));
-}
-
-// Helper function to get country code by value
-export function getCountryByCode(code: string) {
-  return countryCodes.find(country => country.code === code);
-}
-
-// Helper function to format display value for country code field
-export function formatCountryDisplay(code: string): string {
-  const country = getCountryByCode(code);
-  return country ? `${country.flag} ${country.name} (${country.dialCode})` : code;
-}

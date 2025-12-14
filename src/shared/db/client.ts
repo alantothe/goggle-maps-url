@@ -39,7 +39,7 @@ export function initDb() {
     )
   `);
 
-  // Create location taxonomy table for hierarchical location data
+  // Create location hierarchy table for hierarchical location data
   database.run(`
     CREATE TABLE IF NOT EXISTS location_taxonomy (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,6 +62,10 @@ export function initDb() {
   addColumn("dining_type", "dining_type TEXT");
   addColumn("title", "title TEXT");
   addColumn("location_key", "location_key TEXT");
+  addColumn("contact_address", "contact_address TEXT");
+  addColumn("country_code", "country_code TEXT");
+  addColumn("phone_number", "phone_number TEXT");
+  addColumn("website", "website TEXT");
 
   try {
     database.run("UPDATE location SET category = 'attractions' WHERE category IS NULL");

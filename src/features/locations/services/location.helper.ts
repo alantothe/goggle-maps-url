@@ -9,6 +9,12 @@ export function generateGoogleMapsUrl(name: string, address: string): string {
 interface GeocodeResponse {
   status: string;
   results?: Array<{
+    address_components?: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+    formatted_address?: string;
     geometry: {
       location: {
         lat: number;
@@ -18,20 +24,64 @@ interface GeocodeResponse {
   }>;
 }
 
-export async function geocode(address: string, apiKey?: string): Promise<{ lat: number; lng: number } | null> {
+type GeocodeResult = { lat: number; lng: number; countryCode?: string; locationKey?: string | null };
+
+function slugifyLocationPart(value: string | undefined): string | null {
+  if (!value) return null;
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || null;
+}
+
+export async function geocode(address: string, apiKey?: string): Promise<GeocodeResult | null> {
   if (!apiKey) return null;
 
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
     const response = await fetch(url);
-    const data: GeocodeResponse = await response.json();
+    const data = await response.json() as GeocodeResponse;
+    console.log("Geocode full response:", JSON.stringify(data, null, 2));
 
     if (data.status === "OK" && data.results && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return {
-        lat: location.lat,
-        lng: location.lng,
-      };
+      const result = data.results[0];
+      if (result && result.geometry && result.geometry.location) {
+        const location = result.geometry.location;
+        const countryComponent = result.address_components?.find((component) =>
+          component.types?.includes("country")
+        );
+        const cityComponent =
+          result.address_components?.find((component) =>
+            component.types?.includes("locality")
+          ) ||
+          result.address_components?.find((component) =>
+            component.types?.includes("administrative_area_level_1")
+          );
+        const neighborhoodComponent =
+          result.address_components?.find((component) =>
+            component.types?.includes("neighborhood")
+          ) ||
+          result.address_components?.find((component) =>
+            component.types?.includes("sublocality")
+          ) ||
+          result.address_components?.find((component) =>
+            component.types?.includes("sublocality_level_1")
+          );
+
+        const locationParts = [
+          slugifyLocationPart(countryComponent?.long_name),
+          slugifyLocationPart(cityComponent?.long_name),
+          slugifyLocationPart(neighborhoodComponent?.long_name),
+        ].filter(Boolean) as string[];
+
+        return {
+          lat: location.lat,
+          lng: location.lng,
+          countryCode: countryComponent?.short_name,
+          locationKey: locationParts.length ? locationParts.join("|") : null,
+        };
+      }
     }
     return null;
   } catch (error) {
@@ -66,15 +116,17 @@ export async function getPlaceDetails(name: string, address: string, apiKey?: st
 
     const searchResponse = await fetch(searchUrl);
     const searchData = await searchResponse.json() as PlacesApiResponse;
+    console.log("Places Text Search full response:", JSON.stringify(searchData, null, 2));
 
     if (searchData.status === "OK" && searchData.results && searchData.results.length > 0) {
-      const placeId = searchData.results[0].place_id;
+      const placeId = searchData.results[0]!.place_id;
 
       // Get detailed place information
       const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,website,international_phone_number,formatted_phone_number&key=${apiKey}`;
 
       const detailsResponse = await fetch(detailsUrl);
       const detailsData = await detailsResponse.json() as PlacesApiResponse;
+      console.log("Places Details full response:", JSON.stringify(detailsData, null, 2));
 
       if (detailsData.status === "OK" && detailsData.result) {
         return detailsData.result;
@@ -96,15 +148,21 @@ export function extractInstagramData(html: string): { url: string | null; author
   }
 
   const authorMatch = html.match(/A post shared by ([^<]+)/);
-  const author = authorMatch ? authorMatch[1].trim() : null;
+  let author: string | null = null;
+  if (authorMatch && authorMatch[1] !== undefined) {
+    const matched = authorMatch[1];
+    if (typeof matched === 'string') {
+      author = matched.trim();
+    }
+  }
 
-  return { url, author };
+  return { url, author } as { url: string | null; author: string | null };
 }
 
 export function normalizeInstagram(author: string | null): string | null {
   if (!author) return null;
   let handle = author.replace(/A post shared by/gi, "").trim();
-  handle = handle.split(/\s+/)[0];
+  handle = handle.split(/\s+/)[0]!;
   handle = handle.replace(/^@/, "").replace(/[^a-zA-Z0-9._]/g, "");
   if (!handle) return null;
   return `https://www.instagram.com/${handle}/`;
@@ -132,6 +190,7 @@ export async function createFromMaps(
     type: "maps",
     category,
     dining_type,
+    locationKey: null,
   };
 
   if (!apiKey) {
@@ -144,6 +203,12 @@ export async function createFromMaps(
     if (coords) {
       entry.lat = coords.lat;
       entry.lng = coords.lng;
+      if (coords.countryCode) {
+        entry.countryCode = coords.countryCode;
+      }
+      if (coords.locationKey) {
+        entry.locationKey = coords.locationKey;
+      }
     }
 
     // Try to get additional place details using Places API
@@ -151,8 +216,8 @@ export async function createFromMaps(
       const placeDetails = await getPlaceDetails(name, address, apiKey);
       if (placeDetails) {
         // Update with enhanced information from Places API
-        if (placeDetails.formatted_address && !entry.title) {
-          // Could use this for contact address or other fields
+        if (placeDetails.formatted_address) {
+          // Prefer Google-provided address for contact details when available
           entry.contactAddress = placeDetails.formatted_address;
         }
         if (placeDetails.name && placeDetails.name !== name) {

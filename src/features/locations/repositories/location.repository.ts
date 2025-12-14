@@ -1,9 +1,14 @@
 import { getDb } from "../../../shared/db/client";
 import type { LocationEntry } from "../models/location";
+import { isLocationInScope } from "../utils/location-utils";
 
 function mapRow(row: any): LocationEntry {
   return {
     ...row,
+    contactAddress: row.contact_address || null,
+    countryCode: row.country_code || null,
+    phoneNumber: row.phone_number || null,
+    website: row.website || null,
     instagram: row.instagram || null,
     images: row.images ? JSON.parse(row.images) : [],
     original_image_urls: row.original_image_urls ? JSON.parse(row.original_image_urls) : [],
@@ -19,8 +24,8 @@ export function saveLocation(location: LocationEntry): number | boolean {
   try {
     const db = getDb();
     const query = db.query(`
-      INSERT INTO location (name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key)
-      VALUES ($name, $title, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category, $dining_type, $location_key)
+      INSERT INTO location (name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key, contact_address, country_code, phone_number, website)
+      VALUES ($name, $title, $address, $url, $embed_code, $instagram, $images, $lat, $lng, $original_image_urls, $parent_id, $type, $category, $dining_type, $location_key, $contact_address, $country_code, $phone_number, $website)
       ON CONFLICT(name, address) DO UPDATE SET
         title = excluded.title,
         url = excluded.url,
@@ -35,6 +40,10 @@ export function saveLocation(location: LocationEntry): number | boolean {
         category = excluded.category,
         dining_type = excluded.dining_type,
         location_key = excluded.location_key,
+        contact_address = excluded.contact_address,
+        country_code = excluded.country_code,
+        phone_number = excluded.phone_number,
+        website = excluded.website,
         created_at = CURRENT_TIMESTAMP
     `);
 
@@ -54,6 +63,10 @@ export function saveLocation(location: LocationEntry): number | boolean {
       $category: location.category || "attractions",
       $dining_type: location.dining_type || null,
       $location_key: location.locationKey || null,
+      $contact_address: location.contactAddress || null,
+      $country_code: location.countryCode || null,
+      $phone_number: location.phoneNumber || null,
+      $website: location.website || null,
     });
 
     const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -106,6 +119,22 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
       setClause.push("location_key = $location_key");
       params.$location_key = updates.locationKey;
     }
+    if (updates.contactAddress !== undefined) {
+      setClause.push("contact_address = $contact_address");
+      params.$contact_address = updates.contactAddress;
+    }
+    if (updates.countryCode !== undefined) {
+      setClause.push("country_code = $country_code");
+      params.$country_code = updates.countryCode;
+    }
+    if (updates.phoneNumber !== undefined) {
+      setClause.push("phone_number = $phone_number");
+      params.$phone_number = updates.phoneNumber;
+    }
+    if (updates.website !== undefined) {
+      setClause.push("website = $website");
+      params.$website = updates.website;
+    }
 
     if (setClause.length === 0) {
       return false;
@@ -127,14 +156,14 @@ export function updateLocationById(id: number, updates: Partial<LocationEntry>):
 
 export function getAllLocations(): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key FROM location ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key, contact_address, country_code, phone_number, website FROM location ORDER BY created_at DESC");
   const rows = query.all() as any[];
   return rows.map(mapRow);
 }
 
 export function getLocationById(id: number): LocationEntry | null {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key FROM location WHERE id = $id");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key, contact_address, country_code, phone_number, website FROM location WHERE id = $id");
   const row = query.get({ $id: id }) as any;
   if (!row) return null;
   return mapRow(row);
@@ -142,7 +171,7 @@ export function getLocationById(id: number): LocationEntry | null {
 
 export function getLocationsByParentId(parentId: number): LocationEntry[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key, contact_address, country_code, phone_number, website FROM location WHERE parent_id = $parentId ORDER BY created_at DESC");
   const rows = query.all({ $parentId: parentId }) as any[];
   return rows.map(mapRow);
 }
@@ -159,38 +188,17 @@ export function clearDatabase() {
   }
 }
 
-/**
- * Get locations by location key (exact match or within scope)
- */
-export function getLocationsByLocationKey(locationKey: string, includeChildren: boolean = false): LocationEntry[] {
-  const db = getDb();
-
-  if (includeChildren) {
-    // Get locations that match the key or start with key + '|'
-    const query = db.query(`
-      SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key
-      FROM location
-      WHERE location_key = $locationKey OR location_key LIKE $locationKey || '|%'
-      ORDER BY created_at DESC
-    `);
-    const rows = query.all({ $locationKey: locationKey }) as any[];
-    return rows.map(mapRow);
-  } else {
-    // Exact match only
-    const query = db.query(`
-      SELECT id, name, title, address, url, embed_code, instagram, images, lat, lng, original_image_urls, parent_id, type, category, dining_type, location_key
-      FROM location
-      WHERE location_key = $locationKey
-      ORDER BY created_at DESC
-    `);
-    const rows = query.all({ $locationKey: locationKey }) as any[];
-    return rows.map(mapRow);
-  }
-}
 
 /**
  * Get locations by location scope (useful for cascading filters)
  */
 export function getLocationsInScope(locationKey: string): LocationEntry[] {
-  return getLocationsByLocationKey(locationKey, true);
+  if (!locationKey) {
+    return [];
+  }
+
+  const allLocations = getAllLocations();
+  return allLocations.filter(
+    (loc) => loc.locationKey && isLocationInScope(loc.locationKey, locationKey)
+  );
 }

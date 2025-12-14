@@ -1,11 +1,11 @@
-import type { LocationTaxonomy, CountryData, CityData, NeighborhoodData } from '../models/location';
+import type { LocationHierarchy, CountryData, CityData, NeighborhoodData } from '../models/location';
 
 /**
  * Parse a pipe-delimited location key into its components
  * @param locationKey - Pipe-delimited string like "colombia|bogota|chapinero"
  * @returns Parsed location object or null if invalid
  */
-export function parseLocationValue(locationKey: string): LocationTaxonomy | null {
+export function parseLocationValue(locationKey: string): LocationHierarchy | null {
   if (!locationKey || typeof locationKey !== 'string') {
     return null;
   }
@@ -64,11 +64,11 @@ export function formatLocationName(slug: string): string {
 
 /**
  * Filter locations to get all cities for a specific country
- * @param locations - Array of location taxonomy entries
+ * @param locations - Array of location hierarchy entries
  * @param country - Country code like "colombia"
  * @returns Array of city locations (country|city combinations)
  */
-export function filterCitiesByCountry(locations: LocationTaxonomy[], country: string): LocationTaxonomy[] {
+export function filterCitiesByCountry(locations: LocationHierarchy[], country: string): LocationHierarchy[] {
   return locations.filter(loc =>
     loc.country === country &&
     loc.city !== null &&
@@ -78,12 +78,12 @@ export function filterCitiesByCountry(locations: LocationTaxonomy[], country: st
 
 /**
  * Filter locations to get all neighborhoods for a specific city
- * @param locations - Array of location taxonomy entries
+ * @param locations - Array of location hierarchy entries
  * @param country - Country code like "colombia"
  * @param city - City value like "bogota"
  * @returns Array of neighborhood locations (country|city|neighborhood combinations)
  */
-export function filterNeighborhoodsByCity(locations: LocationTaxonomy[], country: string, city: string): LocationTaxonomy[] {
+export function filterNeighborhoodsByCity(locations: LocationHierarchy[], country: string, city: string): LocationHierarchy[] {
   return locations.filter(loc =>
     loc.country === country &&
     loc.city === city &&
@@ -92,12 +92,12 @@ export function filterNeighborhoodsByCity(locations: LocationTaxonomy[], country
 }
 
 /**
- * Get countries from location taxonomy (unique country entries)
- * @param locations - Array of location taxonomy entries
+ * Get countries from location hierarchy (unique country entries)
+ * @param locations - Array of location hierarchy entries
  * @returns Array of unique country locations
  */
-export function getCountries(locations: LocationTaxonomy[]): LocationTaxonomy[] {
-  const countryMap = new Map<string, LocationTaxonomy>();
+export function getCountries(locations: LocationHierarchy[]): LocationHierarchy[] {
+  const countryMap = new Map<string, LocationHierarchy>();
 
   locations.forEach(loc => {
     if (loc.city === null && loc.neighborhood === null && !countryMap.has(loc.country)) {
@@ -127,10 +127,10 @@ export function isLocationInScope(locationKey: string, parentLocationKey: string
 /**
  * Generate all possible location combinations from hierarchical data
  * @param countries - Array of country data with cities and neighborhoods
- * @returns Array of all possible location taxonomy entries
+ * @returns Array of all possible location hierarchy entries
  */
-export function generateLocationCombinations(countries: CountryData[]): LocationTaxonomy[] {
-  const locations: LocationTaxonomy[] = [];
+export function generateLocationCombinations(countries: CountryData[]): LocationHierarchy[] {
+  const locations: LocationHierarchy[] = [];
 
   countries.forEach(country => {
     // Add country-only entry
@@ -163,18 +163,4 @@ export function generateLocationCombinations(countries: CountryData[]): Location
   });
 
   return locations;
-}
-
-/**
- * Validate a location key format
- * @param locationKey - The location key to validate
- * @returns True if the location key is valid
- */
-export function isValidLocationKey(locationKey: string): boolean {
-  if (!locationKey || typeof locationKey !== 'string') {
-    return false;
-  }
-
-  const parts = locationKey.split('|');
-  return parts.length >= 1 && parts.length <= 3 && parts.every(part => part.length > 0);
 }
