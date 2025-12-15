@@ -7,10 +7,20 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 export async function postAddMaps(c: Context) {
   try {
     const body = await c.req.json() as CreateMapsRequest;
-    if (!body.name || !body.address) {
+    const allowedKeys = ["name", "address"];
+    const extraKeys = Object.keys(body || {}).filter((key) => !allowedKeys.includes(key));
+    if (extraKeys.length > 0) {
+      return c.json({ error: `Unexpected fields: ${extraKeys.join(", ")}` }, 400);
+    }
+
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const address = typeof body.address === "string" ? body.address.trim() : "";
+
+    if (!name || !address) {
       return c.json({ error: "Name and address are required" }, 400);
     }
-    const entry = await addMapsLocation(body, GOOGLE_MAPS_API_KEY);
+
+    const entry = await addMapsLocation({ name, address }, GOOGLE_MAPS_API_KEY);
     return c.json({ success: true, entry });
   } catch (error: any) {
     console.error(error);

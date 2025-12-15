@@ -63,26 +63,23 @@ Retrieves all locations with their associated Instagram embeds and uploads.
   "cwd": "/current/working/directory"
 }
 ```
+- `instagram_embeds` and `uploads` only appear on parent `maps` locations.
+- `cwd` reflects the server process working directory.
 
 ### POST /api/add-maps
 Creates a new maps location entry.
 
-**Request Body:**
+**Request Body (JSON):**
 ```json
 {
   "name": "Location Name",
-  "title": "Display Title (optional)",
-  "address": "123 Main St, City, State, Country",
-  "category": "dining|accommodations|attractions|nightlife (optional)",
-  "dining_type": "restaurant|cafe|bar|etc (optional)",
-  "contactAddress": "Contact address (optional)",
-  "countryCode": "+1 (optional)",
-  "phoneNumber": "555-1234 (optional)",
-  "website": "https://example.com (optional)"
+  "address": "123 Main St, City, State, Country"
 }
 ```
 
-**Required Fields:** `name`, `address`
+- Required: `name`, `address`
+- Optional: none (any extra fields are rejected)
+- Behavior: When `GOOGLE_MAPS_API_KEY` is set, the server geocodes the address and may populate `lat`, `lng`, `countryCode`, `locationKey`, `contactAddress`, `website`, and `phoneNumber` from Google responses. The response echoes every field stored for the created location. Without the key, geocoded fields remain null.
 
 **Response:**
 ```json
@@ -116,23 +113,26 @@ Creates a new maps location entry.
 ### POST /api/update-maps
 Updates an existing maps location entry.
 
-**Request Body:**
+**Request Body (JSON):**
 ```json
 {
   "id": 1,
   "name": "Updated Location Name",
-  "title": "Updated Display Title (optional)",
+  "title": "Updated Display Title",
   "address": "Updated Address",
-  "category": "dining|accommodations|attractions|nightlife (optional)",
-  "dining_type": "restaurant|cafe|bar|etc (optional)",
-  "contactAddress": "Updated contact address (optional)",
-  "countryCode": "+1 (optional)",
-  "phoneNumber": "555-1234 (optional)",
-  "website": "https://example.com (optional)"
+  "category": "dining|accommodations|attractions|nightlife",
+  "dining_type": "restaurant|cafe|bar|etc",
+  "contactAddress": "Updated contact address",
+  "countryCode": "+1",
+  "phoneNumber": "555-1234",
+  "website": "https://example.com",
+  "locationKey": "colombia|bogota|chapinero"
 }
 ```
 
-**Required Fields:** `id`, `name`, `address`
+- Required: `id`, `title` (must be present even if unchanged)
+- Optional: `name`, `address`, `category` (defaults to `attractions` if not one of the allowed categories), `dining_type`, `contactAddress`, `countryCode`, `phoneNumber`, `website`, `locationKey`.
+- Behavior: The target entry must be a `maps` location. Supply both `name` and `address` together to regenerate the Google Maps URL; geocoding and coordinate updates only occur when the address changes and `GOOGLE_MAPS_API_KEY` is configured. Other fields are updated directly when provided.
 
 **Response:**
 ```json
@@ -166,7 +166,7 @@ Updates an existing maps location entry.
 ### POST /api/add-instagram
 Adds an Instagram embed to an existing location.
 
-**Request Body:**
+**Request Body (JSON):**
 ```json
 {
   "embedCode": "<blockquote class=\"instagram-media\">...</blockquote>",
@@ -174,7 +174,9 @@ Adds an Instagram embed to an existing location.
 }
 ```
 
-**Required Fields:** `embedCode`, `locationId`
+- Required: `embedCode` (full Instagram embed HTML containing `data-instgrm-permalink`), `locationId` (an existing parent location)
+- Optional: none
+- Behavior: Creates a child entry of type `instagram` under the parent. The server attempts to download media via RapidAPI and writes files under `src/data/images/{location}/instagram/{timestamp}/image_{n}.jpg` (the returned `images` array contains these paths). If media download fails, the embed entry is still created without images.
 
 **Response:**
 ```json
@@ -211,8 +213,9 @@ Uploads files to an existing location.
 **Request Type:** `multipart/form-data`
 
 **Form Fields:**
-- `locationId` or `parentId`: The ID of the parent location
-- `files`: One or more files to upload
+- Required: `locationId` or `parentId` (numeric ID of an existing location), `files` (one or more files)
+- Validation: Only JPEG, PNG, WebP, and GIF files are accepted; max 10MB per file; max 50MB per request; up to 20 files per upload. An empty file list is rejected.
+- Behavior: Files are stored under `src/data/images/{location}/uploads/{timestamp}/image_{n}.{ext}` and the saved paths are echoed in the response.
 
 **Response:**
 ```json
@@ -253,7 +256,7 @@ Opens a folder in the system's file explorer.
 }
 ```
 
-**Required Fields:** `folderPath`
+- Required: `folderPath` (path must resolve inside the server's working directory; absolute or escaping paths are rejected)
 
 **Response:**
 ```json
@@ -313,7 +316,7 @@ Retrieves all available countries.
 Retrieves all cities for a specific country.
 
 **Parameters:**
-- `country`: Country code (e.g., "colombia", "peru")
+- Required path param `country`: Country code/slug (e.g., "colombia", "peru")
 
 **Example:** `GET /api/location-hierarchy/cities/colombia`
 
@@ -339,8 +342,7 @@ Retrieves all cities for a specific country.
 Retrieves all neighborhoods for a specific city and country.
 
 **Parameters:**
-- `country`: Country code (e.g., "colombia")
-- `city`: City name (e.g., "bogota")
+- Required path params: `country` (e.g., "colombia"), `city` (e.g., "bogota")
 
 **Example:** `GET /api/location-hierarchy/neighborhoods/colombia/bogota`
 

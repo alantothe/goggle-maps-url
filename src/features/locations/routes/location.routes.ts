@@ -10,6 +10,7 @@ import {
   getCitiesByCountry,
   getNeighborhoodsByCity,
 } from "../controllers/location-hierarchy";
+import { clearDatabase } from "../controllers/clear-db";
 
 // Location routes
 app.get("/api/locations", getLocations);
@@ -18,6 +19,7 @@ app.post("/api/update-maps", postUpdateMaps);
 app.post("/api/add-instagram", postAddInstagram);
 app.post("/api/add-upload", postAddUpload);
 app.post("/api/open-folder", postOpenFolder);
+app.get("/api/clear-db", clearDatabase);
 
 // Location hierarchy API routes (legacy taxonomy paths kept for compatibility)
 app.get("/api/location-hierarchy", getLocationHierarchy);

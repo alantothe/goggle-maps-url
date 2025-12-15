@@ -10,25 +10,14 @@ import {
   updateLocationById,
 } from "../../../repositories/location.repository";
 
-const VALID_CATEGORIES = ["dining", "accommodations", "attractions", "nightlife"] as const;
+const VALID_CATEGORIES = ["dining", "accommodations", "attractions", "nightlife"];
 
 export async function addMapsLocation(payload: CreateMapsRequest, apiKey?: string): Promise<LocationEntry> {
   if (!payload.name || !payload.address) {
     throw new Error("Name and address required");
   }
 
-  const category = payload.category && VALID_CATEGORIES.includes(payload.category) ? payload.category : "attractions";
-
-  const entry = await createFromMaps(payload.name, payload.address, apiKey, category, payload.dining_type);
-
-  entry.title = payload.title;
-  // Preserve Google-provided contact address unless user explicitly supplies one
-  entry.contactAddress = payload.contactAddress ?? entry.contactAddress;
-  entry.countryCode = payload.countryCode ?? entry.countryCode;
-  // Prefer Google-provided phone/website unless client supplies overrides
-  entry.phoneNumber = payload.phoneNumber ?? entry.phoneNumber;
-  entry.website = payload.website ?? entry.website;
-  entry.locationKey = payload.locationKey ?? entry.locationKey;
+  const entry = await createFromMaps(payload.name, payload.address, apiKey, "attractions", null);
 
   saveLocation(entry);
   return entry;

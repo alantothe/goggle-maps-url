@@ -87,15 +87,7 @@ export interface LocationWithChildren extends LocationEntry {
 
 export interface CreateMapsRequest {
   name: string;
-  title?: string | null;
   address: string;
-  category?: LocationCategory;
-  dining_type?: DiningType | null;
-  contactAddress?: string;
-  countryCode?: string;
-  phoneNumber?: string;
-  website?: string;
-   locationKey?: string | null;
 }
 
 export interface UpdateMapsRequest {

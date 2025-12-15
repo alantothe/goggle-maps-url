@@ -43,11 +43,11 @@ Comprehensive walkthrough of the current backend (Bun + Hono) plus the supportin
   - Interaction: relies on `getAllLocations()`; grouping is purely in memory.
   - Optimization: parent detection ignores non-map roots with `parent_id = null` but `type !== "maps"` (they will be treated as top-level). Consider filtering strictly on `type === "maps"` for clarity.
 - `controllers/maps/index.ts`
-  - `postAddMaps(c)`: validates `name`/`address`, passes payload to `addMapsLocation`, returns JSON.
+  - `postAddMaps(c)`: validates `name`/`address`, rejects any extra fields, passes trimmed payload to `addMapsLocation`, returns JSON.
   - `postUpdateMaps(c)`: validates `id` and `title`, calls `updateMapsLocation`.
   - UI: used by map creation/edit forms; errors drive client-side validation.
 - `controllers/maps/services/maps.service.ts`
-  - `addMapsLocation(payload, apiKey?)`: validates required fields, normalizes category (defaults to `"attractions"`), builds a map entry via `createFromMaps` (geocodes/Places fetch if API key present), enriches with contact fields, then `saveLocation`.
+  - `addMapsLocation(payload, apiKey?)`: validates required fields, builds a map entry via `createFromMaps` (geocodes/Places fetch if API key present), then `saveLocation`. Only name/address come from the client; the rest is derived.
   - `updateMapsLocation(payload, apiKey?)`: loads existing map record, recomputes Maps URL (and optional geocode) when both `name` and `address` provided, then calls `updateLocationById`; returns the re-fetched record.
   - Interaction: depends on `location.helper` for URL/geocode logic and repository for persistence.
   - Optimization:

@@ -24,7 +24,31 @@ interface GeocodeResponse {
   }>;
 }
 
-type GeocodeResult = { lat: number; lng: number; countryCode?: string; locationKey?: string | null };
+type GeocodeResult = { lat: number; lng: number; countryCode?: string };
+
+interface BigDataCloudResponse {
+  latitude: number;
+  longitude: number;
+  localityLanguage: string;
+  continent?: string;
+  continentCode?: string;
+  countryName?: string;
+  countryCode?: string;
+  principalSubdivision?: string;
+  principalSubdivisionCode?: string;
+  city?: string;
+  locality?: string;
+  postcode?: string;
+  plusCode?: string;
+}
+
+type BigDataCloudLocationData = {
+  countryName: string;
+  countryCode: string;
+  city: string;
+  locality: string;
+  locationKey: string;
+};
 
 function slugifyLocationPart(value: string | undefined): string | null {
   if (!value) return null;
@@ -51,35 +75,11 @@ export async function geocode(address: string, apiKey?: string): Promise<Geocode
         const countryComponent = result.address_components?.find((component) =>
           component.types?.includes("country")
         );
-        const cityComponent =
-          result.address_components?.find((component) =>
-            component.types?.includes("locality")
-          ) ||
-          result.address_components?.find((component) =>
-            component.types?.includes("administrative_area_level_1")
-          );
-        const neighborhoodComponent =
-          result.address_components?.find((component) =>
-            component.types?.includes("neighborhood")
-          ) ||
-          result.address_components?.find((component) =>
-            component.types?.includes("sublocality")
-          ) ||
-          result.address_components?.find((component) =>
-            component.types?.includes("sublocality_level_1")
-          );
-
-        const locationParts = [
-          slugifyLocationPart(countryComponent?.long_name),
-          slugifyLocationPart(cityComponent?.long_name),
-          slugifyLocationPart(neighborhoodComponent?.long_name),
-        ].filter(Boolean) as string[];
 
         return {
           lat: location.lat,
           lng: location.lng,
           countryCode: countryComponent?.short_name,
-          locationKey: locationParts.length ? locationParts.join("|") : null,
         };
       }
     }
@@ -135,6 +135,42 @@ export async function getPlaceDetails(name: string, address: string, apiKey?: st
     return null;
   } catch (error) {
     console.error("Error fetching place details:", error);
+    return null;
+  }
+}
+
+export async function reverseGeocodeWithBigDataCloud(
+  latitude: number,
+  longitude: number
+): Promise<BigDataCloudLocationData | null> {
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+    const response = await fetch(url);
+    const data = await response.json() as BigDataCloudResponse;
+
+    // Extract and slugify location parts (country, city, locality/neighborhood)
+    const locationParts = [
+      slugifyLocationPart(data.countryName),
+      slugifyLocationPart(data.city),
+      slugifyLocationPart(data.locality),
+    ].filter(Boolean) as string[];
+
+    const locationKey = locationParts.length ? locationParts.join("|") : "";
+
+    // Create filtered data object
+    const filteredData = {
+      countryName: data.countryName || "",
+      countryCode: data.countryCode || "",
+      city: data.city || "",
+      locality: data.locality || "",
+      locationKey
+    };
+
+    console.log("BigDataCloud Filtered Data:", filteredData);
+
+    return filteredData;
+  } catch (error) {
+    console.error("Error fetching BigDataCloud reverse geocoding:", error);
     return null;
   }
 }
@@ -203,11 +239,21 @@ export async function createFromMaps(
     if (coords) {
       entry.lat = coords.lat;
       entry.lng = coords.lng;
+
+      // Use Google countryCode
       if (coords.countryCode) {
         entry.countryCode = coords.countryCode;
       }
-      if (coords.locationKey) {
-        entry.locationKey = coords.locationKey;
+
+      // Use BigDataCloud ONLY for locationKey (no fallback)
+      try {
+        const bigDataCloudData = await reverseGeocodeWithBigDataCloud(coords.lat, coords.lng);
+        if (bigDataCloudData && bigDataCloudData.locationKey) {
+          entry.locationKey = bigDataCloudData.locationKey;
+        }
+      } catch (bigDataCloudError) {
+        console.warn("Failed to fetch BigDataCloud reverse geocoding:", bigDataCloudError);
+        // locationKey stays null if BigDataCloud fails
       }
     }
 
