@@ -1,23 +1,28 @@
 import { app } from "../../../shared/http/server";
-import { getLocations } from "../controllers/locations";
-import { postAddMaps, postUpdateMaps } from "../controllers/maps";
-import { postAddInstagram } from "../controllers/instagram";
-import { postAddUpload } from "../controllers/uploads";
-import { postOpenFolder, serveImage } from "../controllers/files";
+import { validateBody } from "../../../shared/core/middleware/validation.middleware";
+import { createMapsSchema, updateMapsSchema } from "../validation/schemas/maps.schemas";
+import { addInstagramSchema } from "../validation/schemas/instagram.schemas";
+
+// Import new controllers
+import { getLocations } from "../controllers/locations.controller";
+import { postAddMaps, postUpdateMaps } from "../controllers/maps.controller";
+import { postAddInstagram } from "../controllers/instagram.controller";
+import { postAddUpload } from "../controllers/uploads.controller";
+import { postOpenFolder, serveImage } from "../controllers/files.controller";
 import {
   getLocationHierarchy,
   getCountries,
   getCitiesByCountry,
   getNeighborhoodsByCity,
-} from "../controllers/location-hierarchy";
-import { clearDatabase } from "../controllers/clear-db";
+} from "../controllers/hierarchy.controller";
+import { clearDatabase } from "../controllers/admin.controller";
 
 // Location routes
 app.get("/api/locations", getLocations);
-app.post("/api/add-maps", postAddMaps);
-app.post("/api/update-maps", postUpdateMaps);
-app.post("/api/add-instagram", postAddInstagram);
-app.post("/api/add-upload", postAddUpload);
+app.post("/api/add-maps", validateBody(createMapsSchema), postAddMaps);
+app.post("/api/update-maps", validateBody(updateMapsSchema), postUpdateMaps);
+app.post("/api/add-instagram", validateBody(addInstagramSchema), postAddInstagram);
+app.post("/api/add-upload", postAddUpload); // Note: validation handled in controller due to multipart form
 app.post("/api/open-folder", postOpenFolder);
 app.get("/api/clear-db", clearDatabase);
 

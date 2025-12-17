@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 
-import { getLocations } from "./src/features/locations/controllers/locations";
-import { serveImage } from "./src/features/locations/controllers/files";
+import { getLocations } from "./src/features/locations/controllers/locations.controller";
+import { serveImage } from "./src/features/locations/controllers/files.controller";
 import {
   getLocationHierarchy,
   getCountries,
   getCitiesByCountry,
   getNeighborhoodsByCity,
-} from "./src/features/locations/controllers/location-hierarchy";
+} from "./src/features/locations/controllers/hierarchy.controller";
 
 console.log("🚀 Testing URL Util Routes\n");
 

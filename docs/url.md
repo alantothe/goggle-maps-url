@@ -46,7 +46,6 @@ Retrieves all locations with their associated Instagram embeds and uploads. The 
       "lat": 40.7128,
       "lng": -74.0060,
       "category": "attractions",
-      "dining_type": null,
       "created_at": "2024-01-15T10:30:00.000Z",
       "instagram_embeds": [
         {
@@ -87,7 +86,7 @@ Creates a new maps location entry.
 }
 ```
 
-- Required: `name`, `address`
+- Required: `name`, `address`, `category`
 - Optional: none (any extra fields are rejected)
 - Behavior: When `GOOGLE_MAPS_API_KEY` is set, the server geocodes the address and may populate `lat`, `lng`, `countryCode`, `locationKey`, `contactAddress`, `website`, and `phoneNumber` from Google responses. The response echoes every field stored for the created location. Without the key, geocoded fields remain null.
 
@@ -105,7 +104,6 @@ Creates a new maps location entry.
     "lat": 40.7128,
     "lng": -74.0060,
     "category": "attractions",
-    "dining_type": null,
     "contactAddress": "123 Main St, City, State",
     "countryCode": "+1",
     "phoneNumber": "555-1234",
@@ -126,7 +124,6 @@ Updates an existing maps location entry.
   "name": "Updated Location Name",
   "address": "Updated Address",
   "category": "dining",
-  "dining_type": "restaurant",
   "contactAddress": "Updated contact address",
   "countryCode": "+1",
   "phoneNumber": "555-1234",
@@ -136,7 +133,7 @@ Updates an existing maps location entry.
 ```
 
 - Required: `id`, `title`
-- Optional: `name`, `address`, `category`, `dining_type`, `contactAddress`, `countryCode`, `phoneNumber`, `website`, `locationKey`
+- Optional: `name`, `address`, `category`, `contactAddress`, `countryCode`, `phoneNumber`, `website`, `locationKey`
 - Behavior: Supply both `name` and `address` together to regenerate the Google Maps URL. When the address changes and `GOOGLE_MAPS_API_KEY` is configured, the server will re-geocode and update coordinates. The `category` defaults to `attractions` if not provided or invalid. Other fields are updated directly when provided.
 
 **Response:**
@@ -153,7 +150,6 @@ Updates an existing maps location entry.
     "lat": 40.7128,
     "lng": -74.0060,
     "category": "dining",
-    "dining_type": "restaurant",
     "contactAddress": "Updated contact address",
     "countryCode": "+1",
     "phoneNumber": "555-1234",
@@ -242,7 +238,7 @@ bun run scripts/add-instagram-embed.ts --location-id 1 --embed-file embed.html
     "username": "@username",
     "url": "https://www.instagram.com/p/ABC123/",
     "embed_code": "<blockquote class=\"instagram-media\">...</blockquote>",
-    "instagram": "https://www.instagram.com/username/",
+    "instagram": null,
     "images": ["src/data/images/location_name/instagram/1234567890/image_0.jpg"],
     "original_image_urls": ["https://instagram.com/..."],
     "created_at": "2024-01-15T11:00:00.000Z"
@@ -444,20 +440,13 @@ Common HTTP status codes:
 - `404`: Not Found
 - `500`: Internal Server Error
 
-## Categories and Dining Types
+## Categories
 
 ### Location Categories
 - `dining`
 - `accommodations`
 - `attractions`
 - `nightlife`
-
-### Dining Types
-- `restaurant`, `fast-food`, `food-truck`, `cafe`, `bar`, `pub`
-- `rooftop-bar`, `street-food`, `brewery`, `winery`, `seafood`
-- `italian`, `american`, `wine-bar`, `cocktail-bar`, `dive-bar`
-- `buffet`, `bakery`, `dessert`, `ice-cream`, `coffee-shop`
-- `tea-shop`, `juice-bar`, `smoothie-bar`, `pizza`
 
 ## Environment Variables
 

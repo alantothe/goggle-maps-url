@@ -14,7 +14,7 @@ bun start
 # or
 bun run src/server/main.ts
 ```
-Server runs on `PORT=3000` by default. Set `GOOGLE_MAPS_API_KEY` environment variable to enable geocoding.
+Server runs on `PORT=3000` by default. Set `GOOGLE_MAPS_API_KEY` and `RAPID_API_KEY` environment variables to enable geocoding and Instagram media downloads.
 
 **Seed location hierarchy:**
 ```bash
@@ -40,27 +40,40 @@ Mock Hono contexts to exercise controllers without hitting the network.
 
 ### Entry Point & Server
 - `src/server/main.ts` starts the Bun/Hono server and initializes the database
-- `src/shared/http/server.ts` exports the Hono `app` instance
+- `src/shared/http/server.ts` exports the Hono `app` instance with global error handling via `app.onError()`
 - Routes are auto-registered via side-effect imports in `src/features/locations/routes/location.routes.ts`
 - Database initialized via `initDb()` which auto-migrates from old unified schema to new normalized schema if needed
+- Global error handler catches all errors and returns standardized JSON responses
 
 ### Feature Organization
 ```
 src/features/locations/
-├── controllers/          # HTTP handlers (one per route group)
-│   ├── locations/       # GET /api/locations
-│   ├── maps/            # POST /api/add-maps, /api/update-maps
-│   ├── instagram/       # POST /api/add-instagram
-│   ├── uploads/         # POST /api/add-upload (multipart)
-│   ├── files/           # POST /api/open-folder, GET /src/data/images/*
-│   ├── location-hierarchy/  # GET /api/location-hierarchy/*
-│   └── clear-db/        # GET /api/clear-db
-├── services/            # Business logic called by controllers
+├── controllers/          # Thin HTTP handlers (consolidated files)
+│   ├── locations.controller.ts       # GET /api/locations
+│   ├── maps.controller.ts           # POST /api/add-maps, /api/update-maps
+│   ├── instagram.controller.ts      # POST /api/add-instagram
+│   ├── uploads.controller.ts        # POST /api/add-upload (multipart)
+│   ├── files.controller.ts          # POST /api/open-folder, GET /src/data/images/*
+│   ├── hierarchy.controller.ts      # GET /api/location-hierarchy/*
+│   └── admin.controller.ts          # GET /api/clear-db
+├── services/            # Business logic classes with dependency injection
+│   ├── maps.service.ts
+│   ├── instagram.service.ts
+│   ├── uploads.service.ts
+│   ├── location-query.service.ts
+│   └── location.helper.ts
 ├── repositories/        # Database queries (separated by table)
 │   ├── location.repository.ts
 │   ├── instagram-embed.repository.ts
 │   ├── upload.repository.ts
 │   └── location-hierarchy.repository.ts
+├── validation/          # Zod validation schemas
+│   └── schemas/
+│       ├── maps.schemas.ts
+│       ├── instagram.schemas.ts
+│       └── uploads.schemas.ts
+├── container/           # Dependency injection container
+│   └── service-container.ts
 ├── models/              # TypeScript types and interfaces
 ├── routes/              # Route registration (auto-imported by main.ts)
 ├── utils/               # Location parsing/formatting helpers
@@ -70,10 +83,25 @@ src/features/locations/
 ### Shared Code
 ```
 src/shared/
-├── http/                # Hono server instance
+├── http/                # Hono server instance with error handling
+│   └── server.ts       # Exports app with onError() handler
 ├── db/                  # Database client and migrations
 │   ├── client.ts       # initDb(), getDb(), closeDb()
 │   └── migrations/      # Schema migration scripts
+├── config/              # Environment configuration
+│   └── env.config.ts   # Singleton EnvConfig service
+├── core/                # Core infrastructure
+│   ├── errors/         # Custom error classes
+│   │   └── http-error.ts  # HttpError, BadRequestError, NotFoundError, ValidationError, etc.
+│   ├── middleware/     # Hono middleware
+│   │   └── validation.middleware.ts  # Zod validation middleware
+│   └── types/          # Shared types
+│       └── api-response.ts  # Standardized response types
+├── services/            # Shared services
+│   ├── storage/        # File storage
+│   │   └── image-storage.service.ts  # ImageStorageService for uploads/downloads
+│   └── external/       # External API clients
+│       └── instagram-api.client.ts  # InstagramApiClient for RapidAPI
 └── utils/               # Country codes and other utilities
 ```
 
@@ -144,6 +172,77 @@ src/data/locations/
 - Kebab-case for filenames (`location-utils.ts`, `maps.service.ts`)
 - Keep feature folders cohesive: controller → service → repository → model/util
 - Avoid cross-feature imports unless shared
+
+## Architecture Improvements (December 2025 Refactoring)
+
+The codebase underwent a comprehensive refactoring to improve maintainability, type safety, and testability:
+
+### Key Improvements
+
+1. **Dependency Injection**: All services use constructor injection via `ServiceContainer`
+   - Services are singletons managed by the container
+   - Easy to mock for testing
+   - Clear dependency graph
+
+2. **Validation with Zod**: Request validation using Zod schemas
+   - Type-safe validation with auto-generated TypeScript types
+   - Centralized validation logic in `validation/schemas/`
+   - Consistent error messages across endpoints
+
+3. **Standardized Error Handling**: Custom error classes with proper HTTP status codes
+   - `BadRequestError`, `NotFoundError`, `ValidationError`, etc.
+   - Global error handler via `app.onError()` in `server.ts`
+   - Consistent error response format: `{success: false, error: string, code: string, details?: any}`
+
+4. **Eliminated Code Duplication**: Shared services extract common patterns
+   - `ImageStorageService` handles all filesystem operations for images
+   - `InstagramApiClient` encapsulates RapidAPI integration
+   - `EnvConfig` centralizes environment variable access
+
+5. **Improved Type Safety**: Reduced `any` types, proper error typing
+   - DTOs generated from Zod schemas (`CreateMapsDto`, etc.)
+   - Explicit error types instead of generic Error
+   - Proper typing for all service methods
+
+6. **Standardized Responses**: Consistent API response format
+   - Success: `{success: true, data: {...}}`
+   - Error: `{success: false, error: string, code?: string, details?: any}`
+   - No more mixed response formats across endpoints
+
+### Code Patterns to Follow
+
+**Creating a new endpoint:**
+1. Define Zod schema in `validation/schemas/`
+2. Create controller function that uses `c.get("validatedBody")`
+3. Service class method with DI dependencies
+4. Apply `validateBody(schema)` middleware to route
+5. Throw custom errors (e.g., `BadRequestError`) instead of generic errors
+
+**Example controller pattern:**
+```typescript
+export async function postAddResource(c: Context) {
+  const dto = c.get("validatedBody") as AddResourceDto;
+  const entry = await container.resourceService.addResource(dto);
+  return c.json(successResponse({ entry }));
+}
+```
+
+**Example service pattern:**
+```typescript
+export class ResourceService {
+  constructor(
+    private readonly config: EnvConfig,
+    private readonly storage: ImageStorageService
+  ) {}
+
+  async addResource(payload: AddResourceDto): Promise<Resource> {
+    if (!payload.name) {
+      throw new BadRequestError("Name required");
+    }
+    // Business logic here
+  }
+}
+```
 
 ## API Patterns
 
