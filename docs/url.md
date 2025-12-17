@@ -42,7 +42,6 @@ Retrieves all locations with their associated Instagram embeds and uploads. The 
       "title": "Display Title",
       "address": "123 Main St, City, Country",
       "url": "https://maps.google.com/...",
-      "images": [],
       "lat": 40.7128,
       "lng": -74.0060,
       "category": "attractions",
@@ -82,7 +81,8 @@ Creates a new maps location entry.
 ```json
 {
   "name": "Location Name",
-  "address": "123 Main St, City, State, Country"
+  "address": "123 Main St, City, State, Country",
+  "category": "attractions"
 }
 ```
 
@@ -100,7 +100,6 @@ Creates a new maps location entry.
     "title": null,
     "address": "123 Main St, City, State",
     "url": "https://maps.google.com/...",
-    "images": [],
     "lat": 40.7128,
     "lng": -74.0060,
     "category": "attractions",
@@ -146,7 +145,6 @@ Updates an existing maps location entry.
     "title": "Updated Display Title",
     "address": "Updated Address",
     "url": "https://maps.google.com/...",
-    "images": [],
     "lat": 40.7128,
     "lng": -74.0060,
     "category": "dining",
