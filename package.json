@@ -1,23 +1,18 @@
 {
   "name": "url-util",
-  "module": "src/server/main.ts",
+  "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "start": "bun run src/server/main.ts",
-    "seed:locations": "bun run src/features/locations/scripts/seed-locations.ts",
-    "test:locations": "bun run src/features/locations/scripts/test-location-utils.ts"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "clean": "turbo clean"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "turbo": "^2.7.1",
     "typescript": "^5.0.0"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "csv-parse": "^6.1.0",
-    "hono": "^4.10.8",
-    "prompts": "^2.4.2",
-    "zod": "^3.22.4"
   }
 }
