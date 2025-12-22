@@ -4,56 +4,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A location management API built with Bun and Hono that manages locations with Google Maps URLs, Instagram embeds, and uploaded images. Uses SQLite for persistence with a normalized three-table schema (`locations`, `instagram_embeds`, `uploads`) plus a separate location hierarchy/taxonomy system.
+A location management full-stack application built with Bun, Hono (backend), and Vite + React (frontend). Manages locations with Google Maps URLs, Instagram embeds, and uploaded images. Uses SQLite for persistence with a normalized three-table schema (`locations`, `instagram_embeds`, `uploads`) plus a separate location hierarchy/taxonomy system.
+
+**Monorepo Structure:** Uses Turborepo to manage three packages: `server` (backend), `client` (frontend), and `shared` (common types/utils).
 
 ## Development Commands
 
-**Run the server:**
+**Run the full stack (recommended):**
 ```bash
-bun start
-# or
-bun run src/server/main.ts
-```
-Server runs on `PORT=3000` by default. Set `GOOGLE_MAPS_API_KEY` and `RAPID_API_KEY` environment variables to enable geocoding and Instagram media downloads.
-
-**Seed location hierarchy:**
-```bash
-bun run seed:locations
-# or
-bun run src/features/locations/scripts/seed-locations.ts
+bun run dev  # Starts both server and client via Turborepo
 ```
 
-**Test location utilities:**
+**Run packages individually:**
 ```bash
-bun run test:locations
-# or
-bun run src/features/locations/scripts/test-location-utils.ts
+# Server only (port 3000)
+cd packages/server && bun run dev
+
+# Client only (port 5173)
+cd packages/client && bun run dev
+
+# Server commands
+cd packages/server
+bun run seed:locations       # Seed location hierarchy
+bun run test:locations       # Test location utilities
 ```
 
-**Test route handlers:**
-```bash
-bun run test-routes.ts
-```
-Mock Hono contexts to exercise controllers without hitting the network.
+**Environment:**
+- Server runs on `PORT=3000` by default
+- Client runs on `PORT=5173` with API proxy to server
+- Set `GOOGLE_MAPS_API_KEY` and `RAPID_API_KEY` in `packages/server/.env` for full functionality
 
 ## Architecture
 
+### Monorepo Structure
+```
+url-util/
+├── packages/
+│   ├── server/          # Backend package (Bun + Hono)
+│   ├── client/          # Frontend package (Vite + React)
+│   └── shared/          # Shared types and utilities
+├── turbo.json          # Turborepo configuration
+└── package.json        # Workspace root
+```
+
 ### Entry Point & Server
-- `src/server/main.ts` starts the Bun/Hono server and initializes the database
-- `src/shared/http/server.ts` exports the Hono `app` instance with global error handling via `app.onError()`
-- Routes are auto-registered via side-effect imports in `src/features/locations/routes/location.routes.ts`
+- `packages/server/src/server/main.ts` starts the Bun/Hono server and initializes the database
+- `packages/server/src/shared/http/server.ts` exports the Hono `app` instance with global error handling via `app.onError()`
+- Routes are auto-registered via side-effect imports in `packages/server/src/features/locations/routes/location.routes.ts`
 - Database initialized via `initDb()` which auto-migrates from old unified schema to new normalized schema if needed
 - Global error handler catches all errors and returns standardized JSON responses
 
-### Feature Organization
+### Feature Organization (Server)
 ```
-src/features/locations/
+packages/server/src/features/locations/
 ├── controllers/          # Thin HTTP handlers (consolidated files)
 │   ├── locations.controller.ts       # GET /api/locations
 │   ├── maps.controller.ts           # POST /api/add-maps, /api/update-maps
 │   ├── instagram.controller.ts      # POST /api/add-instagram
 │   ├── uploads.controller.ts        # POST /api/add-upload (multipart)
-│   ├── files.controller.ts          # POST /api/open-folder, GET /src/data/images/*
+│   ├── files.controller.ts          # POST /api/open-folder, GET /packages/server/data/images/*
 │   ├── hierarchy.controller.ts      # GET /api/location-hierarchy/*
 │   └── admin.controller.ts          # GET /api/clear-db
 ├── services/            # Business logic classes with dependency injection
@@ -82,7 +91,7 @@ src/features/locations/
 
 ### Shared Code
 ```
-src/shared/
+packages/server/src/shared/
 ├── http/                # Hono server instance with error handling
 │   └── server.ts       # Exports app with onError() handler
 ├── db/                  # Database client and migrations
@@ -106,10 +115,10 @@ src/shared/
 ```
 
 ### Data Storage
-- `src/data/location.sqlite` - SQLite database
-- `src/data/images/{location}/instagram/{timestamp}/` - Downloaded Instagram images
-- `src/data/images/{location}/uploads/{timestamp}/` - Direct uploads
-- `src/data/locations/` - Hierarchical TypeScript source data for location taxonomy
+- `packages/server/data/location.sqlite` - SQLite database
+- `packages/server/data/images/{location}/instagram/{timestamp}/` - Downloaded Instagram images
+- `packages/server/data/images/{location}/uploads/{timestamp}/` - Direct uploads
+- `packages/server/src/data/locations/` - Hierarchical TypeScript source data for location taxonomy
 
 ## Database Schema
 
@@ -135,7 +144,7 @@ src/shared/
 - Unique constraint on `locationKey`
 
 ### Migration Strategy
-The database auto-migrates from old unified `location` table (with `type` column) to new normalized schema on server start if old schema is detected. See `src/shared/db/migrations/split-location-tables.ts`.
+The database auto-migrates from old unified `location` table (with `type` column) to new normalized schema on server start if old schema is detected. See `packages/server/src/shared/db/migrations/split-location-tables.ts`.
 
 ## Location Hierarchy System
 
@@ -143,7 +152,7 @@ Uses pipe-delimited strings (`country|city|neighborhood`) stored in a flat table
 
 **Source data structure:**
 ```
-src/data/locations/
+packages/server/src/data/locations/
 ├── index.ts                    # Exports all countries
 ├── colombia/
 │   ├── index.ts               # Country definition
@@ -154,7 +163,7 @@ src/data/locations/
 ```
 
 **Adding new locations:**
-1. Edit TypeScript files in `src/data/locations/{country}/{city}/neighborhoods.ts`
+1. Edit TypeScript files in `packages/server/src/data/locations/{country}/{city}/neighborhoods.ts`
 2. Update country index to include new city/neighborhood
 3. Re-run `bun run seed:locations` to regenerate database
 
@@ -273,7 +282,7 @@ export class ResourceService {
 1. POST `/api/add-instagram` with `{ embedCode, locationId }`
 2. `instagram.service.ts` extracts permalink, downloads media via RapidAPI
 3. `instagram-embed.repository.ts` inserts into `instagram_embeds` table
-4. Images saved to `src/data/images/{location}/instagram/{timestamp}/`
+4. Images saved to `packages/server/data/images/{location}/instagram/{timestamp}/`
 
 **Updating location:**
 1. PATCH `/api/maps/:id` with flat fields (e.g., `{ title, category, phoneNumber, ... }`)

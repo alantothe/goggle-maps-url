@@ -1,79 +1,128 @@
 # Location Manager with Instagram Integration
 
-A unified tool to manage locations with Google Maps URLs and enrich them with Instagram content. Create locations, add Instagram embeds, and automatically download associated images.
+A full-stack location management application with Google Maps integration and Instagram content enrichment. Built with Bun, Hono (backend), and Vite + React (frontend) in a monorepo structure.
 
 ## Features
 
-- **Unified Location Management**: Create locations via Google Maps, then add Instagram embeds to them
-- **Single Mode**: Enter a name and address to create a location with Google Maps URL
-- **Batch Mode**: Process CSV or TXT files containing multiple locations
-- **Instagram Integration**: Add Instagram embeds to existing locations with automatic image downloading
-- **View History**: View all locations with their associated Instagram content
-- **Web Interface**: Beautiful card-based UI to manage locations and their Instagram embeds
-- **Persistence**: Automatically saves all data to a local SQLite database (`location.sqlite`)
-- **Hierarchical Structure**: Instagram embeds are linked to their parent locations
-- **Image Management**: Automatically downloads and organizes Instagram images by location
-- **JSON Output**: Exports results to JSON files
+- **Full-Stack Application**: React frontend with Hono API backend
+- **Location Management**: Create and manage locations with Google Maps URLs
+- **Instagram Integration**: Add Instagram embeds to locations with automatic image downloading
+- **Hierarchical Location System**: Organize locations by country → city → neighborhood
+- **Image Management**: Automatically downloads and organizes Instagram images
+- **SQLite Persistence**: Normalized database schema with three tables
+- **API Proxy**: Vite dev server proxies API requests to backend
 
-## Installation
+## Quick Start
 
-1. Ensure you have [Bun](https://bun.sh) installed.
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
+### Prerequisites
 
-## Usage
+- [Bun](https://bun.sh) runtime installed
 
-Run the tool:
+### Installation
+
 ```bash
-bun start
+# Clone and install
+git clone <repo-url>
+cd url-util
+bun install
 ```
 
-### Workflow
+### Development
 
-1. **Create Locations**: Use the web interface to create locations with Google Maps URLs
-2. **Add Instagram Embeds**: Click "Add Instagram" on any location to attach Instagram content
-3. **View & Manage**: Use the web interface to see and manage all your locations with their Instagram content
-
-### Batch File Formats
-
-**CSV (`.csv`)**:
-Must have headers `name` and `address`.
-```csv
-name,address
-Panchita,C. 2 de Mayo 298 Miraflores
+**Run full stack (recommended):**
+```bash
+bun run dev  # Starts both server and client
 ```
 
-**Text (`.txt`)**:
-Each line in the format `Name | Address`.
-```text
-Panchita | C. 2 de Mayo 298 Miraflores
+**Run individually:**
+```bash
+# Terminal 1 - Backend (http://localhost:3000)
+cd packages/server
+bun run dev
+
+# Terminal 2 - Frontend (http://localhost:5173)
+cd packages/client
+bun run dev
 ```
 
-## Web Interface
+### Environment Setup
 
-Select **Start Web Interface** from the main menu to launch the dashboard at `http://localhost:3000`.
+Create `packages/server/.env`:
+```env
+PORT=3000
+GOOGLE_MAPS_API_KEY=your_key_here
+RAPID_API_KEY=your_rapid_api_key
+```
 
-Features:
-- **Card-based Layout**: Clean, modern interface showing all locations
-- **Expandable Instagram Embeds**: Click to expand and see all Instagram content for each location
-- **Quick Actions**: Copy coordinates, open Maps, view images, copy Instagram links
-- **Add Instagram Button**: Per-location button to add new Instagram embeds
-- **Image Gallery**: View and manage downloaded Instagram images with CDN URLs
-- **Organized Storage**: Images are automatically organized in folders by location name
+## Monorepo Structure
 
-## Data Structure
+```
+url-util/
+├── packages/
+│   ├── server/          # Backend (Bun + Hono)
+│   │   ├── src/         # Server source code
+│   │   └── data/        # SQLite database & images
+│   ├── client/          # Frontend (Vite + React)
+│   │   └── src/         # React application
+│   └── shared/          # Shared types & utilities
+├── turbo.json          # Turborepo config
+└── package.json        # Workspace root
+```
 
-The unified database structure:
-- **Main Locations** (`type: 'maps'`): Created via Google Maps flow with name, address, coordinates
-- **Instagram Embeds** (`type: 'instagram'`): Linked to parent locations via `parent_id`
-- **Hierarchical Display**: Instagram embeds are displayed nested under their parent location
+## API Endpoints
 
-## Output
+- `GET /api/locations` - List all locations with filters
+- `POST /api/add-maps` - Create location from Google Maps
+- `PATCH /api/maps/:id` - Update location
+- `POST /api/add-instagram/:id` - Add Instagram embed
+- `POST /api/add-upload/:id` - Upload images
+- `GET /api/images/*` - Serve uploaded/downloaded images
+- `GET /api/location-hierarchy` - Get location hierarchy
 
-- Console output with JSON
-- `output.json` (Single Mode)
-- `location_urls.json` (Batch Mode, in the source folder)
-- `location.sqlite` (SQLite database with unified schema)
-- `images/[location_name]_[timestamp]/` (Downloaded Instagram images organized by location)
+## Database Schema
+
+- **locations** - Main location table (name, address, coordinates, category)
+- **instagram_embeds** - Instagram posts linked to locations
+- **uploads** - Direct image uploads
+- **location_taxonomy** - Hierarchical location data (country|city|neighborhood)
+
+## Server Commands
+
+```bash
+cd packages/server
+
+bun run dev               # Start dev server
+bun run seed:locations    # Seed location hierarchy
+bun run test:locations    # Run location utils tests
+```
+
+## Tech Stack
+
+**Backend:**
+- Bun runtime
+- Hono web framework
+- SQLite (bun:sqlite)
+- Zod validation
+
+**Frontend:**
+- Vite build tool
+- React 19
+- TypeScript
+- Path aliases (@client/*, @shared/*)
+
+**Monorepo:**
+- Turborepo for task orchestration
+- Bun workspaces
+- Shared package for types/utils
+
+## Development Notes
+
+- Server runs on port 3000
+- Client runs on port 5173 with API proxy
+- Images stored in `packages/server/data/images/`
+- Database at `packages/server/data/location.sqlite`
+- Hot reload enabled for both frontend and backend
+
+## Documentation
+
+See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation and development guidelines.
