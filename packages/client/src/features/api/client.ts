@@ -2,8 +2,7 @@
  * Base API client configuration
  */
 
-// Use relative URLs in development to leverage Vite proxy, full URL in production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import { API_BASE_URL } from "./config";
 
 export class ApiError extends Error {
   status: number;
@@ -61,6 +60,14 @@ async function handleResponse<T>(response: Response): Promise<T> {
   }
 
   return response as T;
+}
+
+/**
+ * Unwrap entry field from API responses
+ * Some endpoints return { entry: T } instead of { data: T }
+ */
+export function unwrapEntry<T>(response: { entry: T }): T {
+  return response.entry;
 }
 
 export async function apiGet<T>(

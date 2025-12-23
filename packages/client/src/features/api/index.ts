@@ -14,11 +14,15 @@
  * const imageUrl = filesApi.getImageUrl(location.uploads[0].images[0]);
  */
 
-export { locationsApi } from "./locations.api";
-export { hierarchyApi } from "./hierarchy.api";
-export { filesApi } from "./files.api";
+// API services
+export { locationsApi, hierarchyApi, filesApi } from "./api";
 
-export { ApiError } from "./client";
+// HTTP client and utilities
+export { ApiError, unwrapEntry } from "./client";
 export type { ApiResponse } from "./client";
 
+// Configuration (for advanced usage)
+export { API_BASE_URL, API_ENDPOINTS } from "./config";
+
+// Types
 export type * from "./types";

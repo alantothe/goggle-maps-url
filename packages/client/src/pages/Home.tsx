@@ -67,33 +67,35 @@ export function Home() {
                   border: "1px solid #ddd",
                   borderRadius: "8px",
                   padding: "1rem",
-                  backgroundColor: "#f9f9f9"
+                  backgroundColor: "#ffffff"
                 }}
               >
-                <h3>{location.title || location.source.name}</h3>
-                <p style={{ margin: "0.5rem 0" }}>
+                <h3 style={{ margin: "0 0 1rem 0", color: "#1a1a1a", fontSize: "1.25rem" }}>
+                  {location.title || location.source.name}
+                </h3>
+                <p style={{ margin: "0.5rem 0", color: "#2c2c2c" }}>
                   <strong>Category:</strong> {location.category}
                 </p>
-                <p style={{ margin: "0.5rem 0" }}>
+                <p style={{ margin: "0.5rem 0", color: "#2c2c2c" }}>
                   <strong>Location:</strong> {location.locationKey.split("|").join(" > ")}
                 </p>
-                <p style={{ margin: "0.5rem 0" }}>
+                <p style={{ margin: "0.5rem 0", color: "#2c2c2c" }}>
                   <strong>Address:</strong> {location.contact.contactAddress}
                 </p>
                 {location.contact.phoneNumber && (
-                  <p style={{ margin: "0.5rem 0" }}>
+                  <p style={{ margin: "0.5rem 0", color: "#2c2c2c" }}>
                     <strong>Phone:</strong> {location.contact.phoneNumber}
                   </p>
                 )}
                 {location.contact.website && (
-                  <p style={{ margin: "0.5rem 0" }}>
+                  <p style={{ margin: "0.5rem 0", color: "#2c2c2c" }}>
                     <strong>Website:</strong>{" "}
                     <a href={location.contact.website} target="_blank" rel="noopener noreferrer">
                       {location.contact.website}
                     </a>
                   </p>
                 )}
-                <p style={{ margin: "0.5rem 0", fontSize: "0.875rem", color: "#666" }}>
+                <p style={{ margin: "0.5rem 0", fontSize: "0.875rem", color: "#555" }}>
                   Instagram embeds: {location.instagram_embeds.length} |
                   Uploads: {location.uploads.length}
                 </p>
