@@ -5,6 +5,7 @@ import { MapsService } from "../services/maps.service";
 import { InstagramService } from "../services/instagram.service";
 import { UploadsService } from "../services/uploads.service";
 import { LocationQueryService } from "../services/location-query.service";
+import { LocationMutationService } from "../services/location-mutation.service";
 
 export class ServiceContainer {
   private static instance: ServiceContainer;
@@ -16,6 +17,7 @@ export class ServiceContainer {
   readonly instagramService: InstagramService;
   readonly uploadsService: UploadsService;
   readonly locationQueryService: LocationQueryService;
+  readonly locationMutationService: LocationMutationService;
 
   private constructor() {
     // Singletons
@@ -31,6 +33,7 @@ export class ServiceContainer {
     );
     this.uploadsService = new UploadsService(this.imageStorage);
     this.locationQueryService = new LocationQueryService();
+    this.locationMutationService = new LocationMutationService();
   }
 
   static getInstance(): ServiceContainer {

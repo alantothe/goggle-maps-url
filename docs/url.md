@@ -73,6 +73,42 @@ GET /api/locations?category=dining&locationKey=colombia|bogota
 
 ---
 
+## DELETE /api/locations/:slug
+
+Delete a location by its URL slug.
+
+**Path Parameters:**
+- `slug` (string, required): URL-friendly identifier (kebab-case, e.g., "panchita-miraflores")
+
+**Example:**
+```bash
+DELETE /api/locations/panchita-miraflores
+```
+
+**Response (Success - 200):**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Location deleted successfully"
+  }
+}
+```
+
+**Response (Not Found - 404):**
+```json
+{
+  "success": false,
+  "error": "Location not found"
+}
+```
+
+**Notes:**
+- This operation cascades: all associated Instagram embeds and uploads are also deleted
+- The slug is derived from the location name (lowercase, kebab-case format)
+
+---
+
 ## POST /api/add-maps
 
 **Request:**

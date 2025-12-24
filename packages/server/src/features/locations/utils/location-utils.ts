@@ -201,6 +201,7 @@ export function transformLocationToResponse(location: LocationWithNested): Locat
     },
     instagram_embeds: location.instagram_embeds || [],
     uploads: location.uploads || [],
+    slug: location.slug || null,
     created_at: location.created_at || new Date().toISOString(),
   };
 }

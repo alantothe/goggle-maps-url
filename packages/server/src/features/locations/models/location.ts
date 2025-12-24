@@ -44,6 +44,7 @@ export interface Location {
   countryCode?: string | null;
   phoneNumber?: string | null;
   website?: string | null;
+  slug?: string | null;
   created_at?: string;
 }
 
@@ -126,5 +127,6 @@ export interface LocationResponse {
   source: LocationSource;
   instagram_embeds: InstagramEmbed[];
   uploads: Upload[];
+  slug: string | null;
   created_at: string;
 }

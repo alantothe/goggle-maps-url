@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   LOCATIONS: "/api/locations",
   ADD_MAPS: "/api/add-maps",
   UPDATE_MAPS: (id: number) => `/api/maps/${id}`,
+  DELETE_LOCATION: (slug: string) => `/api/locations/${slug}`,
   ADD_INSTAGRAM: (locationId: number) => `/api/add-instagram/${locationId}`,
   ADD_UPLOAD: (locationId: number) => `/api/add-upload/${locationId}`,
   CLEAR_DB: "/api/clear-db",

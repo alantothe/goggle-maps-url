@@ -1,8 +1,35 @@
-import { useLocations } from "@client/shared/services/api";
+import { useLocations, useDeleteLocation } from "@client/shared/services/api";
+import { useAlert } from "@client/shared/hooks";
 
 export function Home() {
   const { data, isLoading, error, refetch } = useLocations();
+  const deleteLocationMutation = useDeleteLocation();
+  const { showConfirm, showSuccess, showError } = useAlert();
   const locations = data?.locations ?? [];
+
+  const handleDeleteLocation = async (slug: string | null, locationName: string) => {
+    if (!slug) {
+      showError("Cannot delete location: no slug available", "Error");
+      return;
+    }
+
+    showConfirm({
+      title: "Delete Location",
+      message: `Are you sure you want to delete "${locationName}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteLocationMutation.mutateAsync(slug);
+          showSuccess("Location deleted successfully", "Success");
+        } catch (error) {
+          console.error("Failed to delete location:", error);
+          showError("Failed to delete location. Please try again.", "Error");
+        }
+      }
+    });
+  };
 
   if (isLoading) {
     return (
@@ -76,6 +103,22 @@ export function Home() {
                   Instagram embeds: {location.instagram_embeds.length} |
                   Uploads: {location.uploads.length}
                 </p>
+                <button
+                  onClick={() => handleDeleteLocation(location.slug, location.title || location.source.name)}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "0.875rem"
+                  }}
+                  disabled={deleteLocationMutation.isPending}
+                >
+                  {deleteLocationMutation.isPending ? "Deleting..." : "Delete Location"}
+                </button>
               </div>
             ))}
           </div>

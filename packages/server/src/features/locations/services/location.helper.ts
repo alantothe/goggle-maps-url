@@ -50,7 +50,7 @@ type BigDataCloudLocationData = {
   locationKey: string;
 };
 
-function slugifyLocationPart(value: string | undefined): string | null {
+export function slugifyLocationPart(value: string | undefined): string | null {
   if (!value) return null;
   const slug = value
     .toLowerCase()

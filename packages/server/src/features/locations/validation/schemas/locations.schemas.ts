@@ -10,4 +10,13 @@ export const listLocationsQuerySchema = z.object({
     .optional(),
 }).strict();
 
+export const deleteLocationSlugSchema = z.object({
+  slug: z.string()
+    .trim()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase kebab-case (letters, numbers, hyphens only)")
+    .max(100, "Slug is too long")
+}).strict();
+
 export type ListLocationsQueryDto = z.infer<typeof listLocationsQuerySchema>;
+export type DeleteLocationSlugDto = z.infer<typeof deleteLocationSlugSchema>;

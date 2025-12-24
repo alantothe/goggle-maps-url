@@ -135,3 +135,13 @@ export async function apiPostFormData<T>(
   });
   return handleResponse<T>(response);
 }
+
+export async function apiDelete<T>(
+  path: string
+): Promise<T> {
+  const url = API_BASE_URL ? new URL(path, API_BASE_URL).toString() : path;
+  const response = await fetch(url, {
+    method: "DELETE",
+  });
+  return handleResponse<T>(response);
+}

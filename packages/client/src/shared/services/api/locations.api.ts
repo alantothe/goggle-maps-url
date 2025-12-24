@@ -2,7 +2,7 @@
  * Location management API
  */
 
-import { apiGet, apiPost, apiPatch, apiPostFormData, unwrapEntry } from "./client";
+import { apiGet, apiPost, apiPatch, apiPostFormData, apiDelete, unwrapEntry } from "./client";
 import { API_ENDPOINTS } from "./config";
 import type {
   LocationsResponse,
@@ -94,5 +94,12 @@ export const locationsApi = {
    */
   async clearDatabase(): Promise<SuccessResponse> {
     return apiGet<SuccessResponse>(API_ENDPOINTS.CLEAR_DB);
+  },
+
+  /**
+   * Delete a location by slug
+   */
+  async deleteLocation(slug: string): Promise<SuccessResponse> {
+    return apiDelete<SuccessResponse>(API_ENDPOINTS.DELETE_LOCATION(slug));
   },
 };

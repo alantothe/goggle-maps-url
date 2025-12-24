@@ -52,6 +52,7 @@ export interface Location {
   source: SourceInfo;
   instagram_embeds: InstagramEmbed[];
   uploads: Upload[];
+  slug: string | null;
   created_at: string;
 }
 

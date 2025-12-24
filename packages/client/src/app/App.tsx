@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@client/shared/components/layout";
 import { Home, AddLocation } from "@client/features/locations";
-import "../App.css";
 
 function App() {
   return (

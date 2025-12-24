@@ -6,6 +6,7 @@ import { migrateUploadsToPhotographerCredit } from "./migrations/uploads-photogr
 import { removeLocationImagesField } from "./migrations/remove-location-images-field";
 import { removeLocationDiningType } from "./migrations/remove-location-dining-type";
 import { addCategoryConstraint } from "./migrations/add-category-constraint";
+import { addLocationSlug } from "./migrations/add-location-slug";
 
 let db: Database | null = null;
 
@@ -67,6 +68,7 @@ export function initDb() {
       countryCode TEXT,
       phoneNumber TEXT,
       website TEXT,
+      slug TEXT UNIQUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(name, address)
     )
@@ -124,6 +126,9 @@ export function initDb() {
 
   // Run migration to add CHECK constraint to category field
   addCategoryConstraint(database);
+
+  // Run migration to add slug column to locations table
+  addLocationSlug(database);
 }
 
 export function getDb(): Database {

@@ -4,3 +4,14 @@ export { Field, FieldLabel, FieldDescription, FieldError, FieldContent } from ".
 export { Input } from "./input";
 export { Label } from "./label";
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./select";
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./alert-dialog";

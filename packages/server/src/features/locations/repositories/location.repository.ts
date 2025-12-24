@@ -1,6 +1,7 @@
 import { getDb } from "@server/shared/db/client";
 import type { Location } from "../models/location";
 import { isLocationInScope } from "../utils/location-utils";
+import { slugifyLocationPart } from "../services/location.helper";
 
 function mapRow(row: any): Location {
   return {
@@ -9,11 +10,16 @@ function mapRow(row: any): Location {
 }
 
 export function saveLocation(location: Location): number | boolean {
+  // Generate slug if not provided
+  if (!location.slug && location.name) {
+    location.slug = slugifyLocationPart(location.name);
+  }
+
   try {
     const db = getDb();
     const query = db.query(`
-      INSERT INTO locations (name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website)
-      VALUES ($name, $title, $address, $url, $lat, $lng, $category, $locationKey, $contactAddress, $countryCode, $phoneNumber, $website)
+      INSERT INTO locations (name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, slug)
+      VALUES ($name, $title, $address, $url, $lat, $lng, $category, $locationKey, $contactAddress, $countryCode, $phoneNumber, $website, $slug)
       ON CONFLICT(name, address) DO UPDATE SET
         title = excluded.title,
         url = excluded.url,
@@ -25,6 +31,7 @@ export function saveLocation(location: Location): number | boolean {
         countryCode = excluded.countryCode,
         phoneNumber = excluded.phoneNumber,
         website = excluded.website,
+        slug = excluded.slug,
         created_at = CURRENT_TIMESTAMP
     `);
 
@@ -41,6 +48,7 @@ export function saveLocation(location: Location): number | boolean {
       $countryCode: location.countryCode || null,
       $phoneNumber: location.phoneNumber || null,
       $website: location.website || null,
+      $slug: location.slug || null,
     });
 
     const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -126,22 +134,30 @@ export function updateLocationById(id: number, updates: Partial<Location>): bool
 
 export function getAllLocations(): Location[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, created_at FROM locations ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations ORDER BY created_at DESC");
   const rows = query.all() as any[];
   return rows.map(mapRow);
 }
 
 export function getLocationsByCategory(category: string): Location[] {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, created_at FROM locations WHERE category = $category ORDER BY created_at DESC");
+  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE category = $category ORDER BY created_at DESC");
   const rows = query.all({ $category: category }) as any[];
   return rows.map(mapRow);
 }
 
 export function getLocationById(id: number): Location | null {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, created_at FROM locations WHERE id = $id");
+  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE id = $id");
   const row = query.get({ $id: id }) as any;
+  if (!row) return null;
+  return mapRow(row);
+}
+
+export function getLocationBySlug(slug: string): Location | null {
+  const db = getDb();
+  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE slug = $slug");
+  const row = query.get({ $slug: slug }) as any;
   if (!row) return null;
   return mapRow(row);
 }
@@ -156,6 +172,33 @@ export function clearDatabase() {
     return true;
   } catch (error) {
     console.error("Error clearing database:", error);
+    return false;
+  }
+}
+
+export function deleteLocationBySlug(slug: string): boolean {
+  try {
+    const db = getDb();
+
+    // First get the location to check if it exists
+    const location = getLocationBySlug(slug);
+    if (!location || !location.id) {
+      return false;
+    }
+
+    // Delete related instagram_embeds
+    db.run("DELETE FROM instagram_embeds WHERE location_id = ?", location.id);
+
+    // Delete related uploads
+    db.run("DELETE FROM uploads WHERE location_id = ?", location.id);
+
+    // Delete the location itself
+    const deleteStmt = db.query("DELETE FROM locations WHERE slug = $slug");
+    const result = deleteStmt.run({ $slug: slug });
+
+    return result.changes > 0;
+  } catch (error) {
+    console.error("Error deleting location by slug:", error);
     return false;
   }
 }
