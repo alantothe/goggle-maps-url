@@ -61,6 +61,17 @@ export interface LocationsResponse {
   cwd: string;
 }
 
+export interface LocationBasic {
+  id: number;
+  name: string;
+  location: string | null;
+  category: Category;
+}
+
+export interface LocationsBasicResponse {
+  locations: LocationBasic[];
+}
+
 export interface LocationEntryResponse {
   entry: Location;
 }

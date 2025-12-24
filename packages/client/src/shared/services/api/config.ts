@@ -15,6 +15,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 export const API_ENDPOINTS = {
   // Location management
   LOCATIONS: "/api/locations",
+  LOCATIONS_BASIC: "/api/locations-basic",
   ADD_MAPS: "/api/add-maps",
   UPDATE_MAPS: (id: number) => `/api/maps/${id}`,
   DELETE_LOCATION: (slug: string) => `/api/locations/${slug}`,

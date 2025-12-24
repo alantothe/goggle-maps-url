@@ -6,6 +6,7 @@ import { apiGet, apiPost, apiPatch, apiPostFormData, apiDelete, unwrapEntry } fr
 import { API_ENDPOINTS } from "./config";
 import type {
   LocationsResponse,
+  LocationsBasicResponse,
   LocationEntryResponse,
   Location,
   CreateMapsRequest,
@@ -30,6 +31,16 @@ export const locationsApi = {
     locationKey?: string;
   }): Promise<LocationsResponse> {
     return apiGet<LocationsResponse>(API_ENDPOINTS.LOCATIONS, params as Record<string, string>);
+  },
+
+  /**
+   * Get basic location info with optional filters
+   */
+  async getLocationsBasic(params?: {
+    category?: Category;
+    locationKey?: string;
+  }): Promise<LocationsBasicResponse> {
+    return apiGet<LocationsBasicResponse>(API_ENDPOINTS.LOCATIONS_BASIC, params as Record<string, string>);
   },
 
   /**
