@@ -1,6 +1,6 @@
 import * as React from "react";
 import { type Control } from "react-hook-form";
-import { Input } from "../ui/input";
+import { Input } from "@client/components/ui";
 import { FormBase } from "./form-base";
 
 export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {

@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@client/shared/components/ui/alert-dialog";
+} from "@client/components/ui";
 
 type AlertType = "confirm" | "alert" | "error" | "success";
 

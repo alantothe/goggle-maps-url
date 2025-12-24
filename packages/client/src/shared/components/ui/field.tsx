@@ -2,7 +2,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "../../lib/utils";
-import { Label } from "./label";
+import { Label } from "@client/components/ui";
 
 const fieldVariants = cva(
   "flex flex-col gap-2",
@@ -35,7 +35,7 @@ const Field = React.forwardRef<HTMLDivElement, FieldProps>(
 Field.displayName = "Field";
 
 const FieldLabel = React.forwardRef<
-  React.ElementRef<typeof Label>,
+  React.ComponentRef<typeof Label>,
   React.ComponentPropsWithoutRef<typeof Label>
 >(({ className, ...props }, ref) => (
   <Label ref={ref} className={cn("", className)} {...props} />

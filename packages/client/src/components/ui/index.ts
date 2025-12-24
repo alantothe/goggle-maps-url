@@ -1,0 +1,29 @@
+// shadcn/ui components barrel exports
+export { Button, buttonVariants } from "./button";
+export { Input } from "./input";
+export { Label } from "./label";
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
+export {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  AlertDialogPortal,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./alert-dialog";

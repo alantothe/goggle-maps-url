@@ -3,8 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { addLocationSchema, type AddLocationFormData } from "../validation/add-location.schema";
 import { useCreateLocation } from "@client/shared/services/api";
 import { FormInput, FormSelect } from "@client/shared/components/forms";
-import { SelectItem } from "@client/shared/components/ui";
-import { Button } from "@client/shared/components/ui";
+import { SelectItem, Button } from "@client/components/ui";
 
 export function AddLocation() {
   const { mutate, isPending, isSuccess, error } = useCreateLocation();
