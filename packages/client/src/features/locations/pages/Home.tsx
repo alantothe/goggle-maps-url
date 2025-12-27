@@ -29,7 +29,6 @@ export function Home() {
   if (error) {
     return (
       <div>
-        <h1>Welcome to Location Manager</h1>
         <p style={{ color: "red" }}>Error: {error.message}</p>
         <button onClick={() => refetch()}>Retry</button>
       </div>
@@ -38,7 +37,6 @@ export function Home() {
 
   return (
     <div>
-      <h1>Welcome to Location Manager</h1>
 
       <LocationFilters
         selectedCountry={filters.selectedCountry}

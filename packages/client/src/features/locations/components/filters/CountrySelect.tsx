@@ -11,9 +11,6 @@ interface CountrySelectProps {
 export function CountrySelect({ value, onChange, countries, isLoading }: CountrySelectProps) {
   return (
     <div>
-      <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>
-        Country
-      </label>
       <Select value={value ?? ""} onValueChange={onChange} disabled={isLoading}>
         <SelectTrigger>
           <SelectValue placeholder={isLoading ? "Loading..." : "Select country"} />

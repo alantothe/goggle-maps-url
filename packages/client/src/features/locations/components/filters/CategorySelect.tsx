@@ -17,9 +17,6 @@ const CATEGORIES: { value: Category; label: string }[] = [
 export function CategorySelect({ value, onChange, disabled }: CategorySelectProps) {
   return (
     <div>
-      <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>
-        Category
-      </label>
       <Select value={value ?? ""} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger>
           <SelectValue placeholder="Select category" />
