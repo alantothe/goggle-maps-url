@@ -1,1 +1,1 @@
-export { countryCodeToLocationKey } from "./filter-utils";
+export { countryCodeToLocationKey, truncateUrl } from "./filter-utils";

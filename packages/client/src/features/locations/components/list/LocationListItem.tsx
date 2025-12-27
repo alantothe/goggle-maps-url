@@ -2,6 +2,7 @@ import { useState } from "react";
 import { formatLocationHierarchy } from "@client/shared/lib/utils";
 import { useLocationDetail } from "../../hooks";
 import { useToast } from "@client/shared/hooks/useToast";
+import { truncateUrl } from "../../utils";
 
 function getCategoryBadgeStyles(category: string) {
   const categoryLower = category.toLowerCase();
@@ -159,7 +160,7 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
                     onClick={(e) => handleCopyField(locationDetail.contact.url, e)}
                     title="Click to copy Google Maps URL"
                   >
-                    {locationDetail.contact.url}
+                    {truncateUrl(locationDetail.contact.url)}
                   </span>
                 </div>
               )}
