@@ -9,13 +9,15 @@ export function Home() {
   const filters = useLocationFilters();
   const { data: countries = [], isLoading: isLoadingCountries } = useCountries();
 
-  // Build API params only when both filters selected
-  const apiParams = filters.isFilterActive && filters.selectedCountry
-    ? {
-        category: filters.selectedCategory!,
-        locationKey: countryCodeToLocationKey(filters.selectedCountry, countries)!
-      }
+  // Build API params - both category and locationKey are optional
+  const locationKey = filters.selectedCountry
+    ? countryCodeToLocationKey(filters.selectedCountry, countries)
     : undefined;
+
+  const apiParams = {
+    ...(filters.selectedCategory && { category: filters.selectedCategory }),
+    ...(locationKey && { locationKey })
+  };
 
   const { data, isLoading, error, refetch } = useLocationsBasic(apiParams);
   const locations = (data?.locations ?? []).map(location => ({
@@ -54,7 +56,7 @@ export function Home() {
         </h2>
 
         {isLoading ? (
-          <p>Loading locations...</p>
+          <p>Loading lo1cations...</p>
         ) : locations.length === 0 ? (
           <LocationListEmpty />
         ) : (

@@ -7,7 +7,7 @@ export function useLocationFilters() {
 
   const handleCountryChange = (country: string | null) => {
     setSelectedCountry(country);
-    if (!country) setSelectedCategory(null); // Reset category when country cleared
+    // Don't reset category when country is cleared - they can be used independently
   };
 
   const reset = () => {
@@ -21,6 +21,6 @@ export function useLocationFilters() {
     setCountry: handleCountryChange,
     setCategory: setSelectedCategory,
     reset,
-    isFilterActive: !!(selectedCountry && selectedCategory)
+    isFilterActive: !!(selectedCountry || selectedCategory) // Active if either is selected
   };
 }

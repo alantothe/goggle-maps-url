@@ -36,7 +36,7 @@ export function LocationFilters({
       <CategorySelect
         value={selectedCategory}
         onChange={onCategoryChange}
-        disabled={!selectedCountry}
+        disabled={false} // Category can be selected independently of country
       />
 
       <Button

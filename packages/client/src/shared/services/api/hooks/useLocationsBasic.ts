@@ -11,7 +11,7 @@ export function useLocationsBasic(params?: {
   return useQuery({
     queryKey: ["locations-basic", params?.category, params?.locationKey],
     queryFn: () => locationsApi.getLocationsBasic(params),
-    enabled: !params || (!!params.category && !!params.locationKey), // Only run when both provided
+    enabled: true, // Always enabled - show all locations by default
   });
 }
 
