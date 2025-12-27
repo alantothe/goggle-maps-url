@@ -5,7 +5,7 @@ import { BadRequestError } from "@server/shared/core/errors/http-error";
 const APPROVED_COUNTRIES = ['PE', 'CO', 'BR'] as const;
 
 export function generateGoogleMapsUrl(name: string, address: string): string {
-  const query = `${name} ${address}`;
+  const query = `${name}, ${address}`;
   const encodedQuery = encodeURIComponent(query);
   return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
 }
@@ -99,7 +99,7 @@ export async function getPlaceDetails(name: string, address: string, apiKey?: st
 
   try {
     // Use Places API Text Search to find the place
-    const query = `${name} ${address}`;
+    const query = `${name}, ${address}`;
     const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${apiKey}`;
 
     const searchResponse = await fetch(searchUrl);

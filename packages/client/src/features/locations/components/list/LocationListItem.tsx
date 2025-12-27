@@ -149,6 +149,21 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
                 </div>
               )}
 
+              {locationDetail.contact.url && (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
+                    Google URL:
+                  </span>
+                  <span
+                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors break-all"
+                    onClick={(e) => handleCopyField(locationDetail.contact.url, e)}
+                    title="Click to copy Google Maps URL"
+                  >
+                    {locationDetail.contact.url}
+                  </span>
+                </div>
+              )}
+
               {locationDetail.coordinates?.lat && locationDetail.coordinates?.lng && (
                 <div className="flex items-baseline gap-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
