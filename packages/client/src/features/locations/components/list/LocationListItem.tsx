@@ -1,9 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Settings } from "lucide-react";
+import { useState } from "react";
 import { formatLocationHierarchy } from "@client/shared/lib/utils";
-import { useLocationDetail } from "../../hooks";
-import { useToast } from "@client/shared/hooks/useToast";
-import { truncateUrl } from "../../utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,24 +10,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@client/components/ui";
-import { useDeleteLocation } from "@client/shared/services/api/hooks";
-
-function getCategoryBadgeStyles(category: string) {
-  const categoryLower = category.toLowerCase();
-
-  switch (categoryLower) {
-    case 'accommodations':
-      return 'bg-blue-50 text-slate-600';
-    case 'nightlife':
-      return 'bg-purple-50 text-slate-600';
-    case 'dining':
-      return 'bg-orange-50 text-slate-600';
-    case 'attractions':
-      return 'bg-green-50 text-slate-600';
-    default:
-      return 'bg-gray-50 text-slate-600';
-  }
-}
+import { getCategoryBadgeStyles } from "../../utils";
+import {
+  useLocationDetail,
+  useLocationItemMenu,
+  useLocationDelete,
+  useClipboardCopy,
+} from "../../hooks";
+import { LocationItemMenu } from "./LocationItemMenu";
+import { LocationDetailView } from "./LocationDetailView";
 
 interface LocationListItemProps {
   location: {
@@ -45,24 +32,23 @@ interface LocationListItemProps {
 
 export function LocationListItem({ location, onClick }: LocationListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Custom hooks
   const { data: locationDetail, isLoading, error } = useLocationDetail(isExpanded ? location.id : null);
-  const { showToast } = useToast();
-  const deleteLocationMutation = useDeleteLocation();
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const { isMenuOpen, menuRef, toggleMenu, closeMenu } = useLocationItemMenu();
+  const { copyToClipboard } = useClipboardCopy();
+  const {
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+    isDeleting,
+  } = useLocationDelete({
+    locationId: location.id,
+    locationName: location.name,
+    onMenuClose: closeMenu,
+  });
 
   const handleClick = () => {
     if (onClick) {
@@ -72,36 +58,10 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
     }
   };
 
-  const handleCopyField = async (value: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the expand/collapse
-
-    try {
-      await navigator.clipboard.writeText(value);
-      const rect = (e.target as HTMLElement).getBoundingClientRect();
-      showToast('Copied', {
-        x: rect.right,
-        y: rect.top + rect.height / 2, // Position to the right, vertically centered
-      });
-    } catch (error) {
-      console.error('Failed to copy text: ', error);
-    }
-  };
-
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMenuOpen(false); // Close the menu
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await deleteLocationMutation.mutateAsync(location.id);
-      showToast('Location deleted successfully', { x: window.innerWidth / 2, y: 100 });
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to delete location:', error);
-      showToast('Failed to delete location', { x: window.innerWidth / 2, y: 100 });
-    }
+    closeMenu();
+    // TODO: Implement edit functionality
   };
 
   return (
@@ -121,34 +81,17 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0 relative" ref={menuRef}>
-          <Settings
-            size={16}
-            className="text-black cursor-pointer"
-            onClick={(e) => {
+        <div className="flex items-center gap-3 shrink-0">
+          <LocationItemMenu
+            isOpen={isMenuOpen}
+            onToggle={(e) => {
               e.stopPropagation();
-              setIsMenuOpen(!isMenuOpen);
+              toggleMenu();
             }}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            menuRef={menuRef}
           />
-          {isMenuOpen && (
-            <div className="absolute right-full mr-2 top-0 z-10 bg-white border border-gray-200 rounded py-0.5 min-w-[80px] max-h-[77px]">
-              <button
-                className="w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Handle edit action here
-                }}
-              >
-                Edit
-              </button>
-              <button
-                className="w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={handleDeleteClick}
-              >
-                Delete
-              </button>
-            </div>
-          )}
           <span className={`text-xs font-medium uppercase tracking-wider px-2 py-1 rounded-md ${getCategoryBadgeStyles(location.category)}`}>
             {location.category}
           </span>
@@ -157,149 +100,15 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          {isLoading && (
-            <p className="text-sm text-gray-600">Loading details...</p>
-          )}
-
-          {error && (
-            <p className="text-sm text-red-600">
-              Error loading details: {error.message}
-            </p>
-          )}
-
-          {locationDetail && (
-            <div className="space-y-3">
-              {locationDetail.title && locationDetail.title !== locationDetail.source?.name && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Title:
-                  </span>
-                  <span className="text-sm text-gray-900">{locationDetail.title}</span>
-                </div>
-              )}
-
-              {locationDetail.source?.address && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Address:
-                  </span>
-                  <span
-                    className="text-sm text-gray-900 leading-relaxed cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                    onClick={(e) => handleCopyField(locationDetail.source!.address!, e)}
-                    title="Click to copy address"
-                  >
-                    {locationDetail.source.address}
-                  </span>
-                </div>
-              )}
-
-              {locationDetail.contact?.phoneNumber && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Phone:
-                  </span>
-                  <span
-                    className="text-sm text-gray-900 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                    onClick={(e) => handleCopyField(locationDetail.contact!.phoneNumber!, e)}
-                    title="Click to copy phone number"
-                  >
-                    {locationDetail.contact.phoneNumber}
-                  </span>
-                </div>
-              )}
-
-              {locationDetail.contact?.website && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Website:
-                  </span>
-                  <span
-                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                    onClick={(e) => handleCopyField(locationDetail.contact!.website!, e)}
-                    title="Click to copy website URL"
-                  >
-                    {locationDetail.contact.website}
-                  </span>
-                </div>
-              )}
-
-              {locationDetail.contact.url && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Google URL:
-                  </span>
-                  <span
-                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors break-all"
-                    onClick={(e) => handleCopyField(locationDetail.contact.url, e)}
-                    title="Click to copy Google Maps URL"
-                  >
-                    {truncateUrl(locationDetail.contact.url)}
-                  </span>
-                </div>
-              )}
-
-              {locationDetail.coordinates?.lat && locationDetail.coordinates?.lng && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Coordinates:
-                  </span>
-                  <div className="flex gap-1 items-baseline">
-                    <span
-                      className="text-sm text-gray-900 font-mono cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                      onClick={(e) => handleCopyField(locationDetail.coordinates?.lat?.toString() || '', e)}
-                      title="Click to copy latitude"
-                    >
-                      {locationDetail.coordinates.lat}
-                    </span>
-                    <span className="text-sm text-gray-500">, </span>
-                    <span
-                      className="text-sm text-gray-900 font-mono cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                      onClick={(e) => handleCopyField(locationDetail.coordinates?.lng?.toString() || '', e)}
-                      title="Click to copy longitude"
-                    >
-                      {locationDetail.coordinates.lng}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {locationDetail.instagram_embeds?.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Instagram Posts:
-                  </span>
-                  <ul className="space-y-1 ml-4">
-                    {locationDetail.instagram_embeds.map((embed) => (
-                      <li key={embed.id}>
-                        <span
-                          className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-                          onClick={(e) => handleCopyField(`@${embed.username}`, e)}
-                          title="Click to copy Instagram username"
-                        >
-                          @{embed.username}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {locationDetail.uploads?.length > 0 && (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
-                    Images:
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {locationDetail.uploads.length} image{locationDetail.uploads.length !== 1 ? 's' : ''} uploaded
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <LocationDetailView
+          locationDetail={locationDetail}
+          isLoading={isLoading}
+          error={error}
+          onCopyField={copyToClipboard}
+        />
       )}
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -309,13 +118,13 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-red-600 hover:bg-red-700"
-              disabled={deleteLocationMutation.isPending}
+              disabled={isDeleting}
             >
-              {deleteLocationMutation.isPending ? 'Deleting...' : 'Delete'}
+              {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
