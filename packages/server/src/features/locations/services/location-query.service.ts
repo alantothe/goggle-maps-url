@@ -1,5 +1,5 @@
 import type { LocationWithNested, LocationResponse, LocationBasic } from "../models/location";
-import { getAllLocations, getLocationsByCategory } from "../repositories/location.repository";
+import { getAllLocations, getLocationsByCategory, getLocationById } from "../repositories/location.repository";
 import { getAllInstagramEmbeds } from "../repositories/instagram-embed.repository";
 import { getAllUploads } from "../repositories/upload.repository";
 import { transformLocationToResponse, transformLocationToBasicResponse, isLocationInScope } from "../utils/location-utils";
@@ -48,5 +48,27 @@ export class LocationQueryService {
 
     // Step 3: Transform to basic LocationBasic format
     return locations.map(transformLocationToBasicResponse);
+  }
+
+  getLocationById(id: number): LocationResponse | null {
+    // Step 1: Get location by ID
+    const location = getLocationById(id);
+    if (!location) {
+      return null;
+    }
+
+    // Step 2: Fetch related data
+    const allEmbeds = getAllInstagramEmbeds();
+    const allUploads = getAllUploads();
+
+    // Step 3: Create LocationWithNested
+    const locationWithNested: LocationWithNested = {
+      ...location,
+      instagram_embeds: allEmbeds.filter((e) => e.location_id === location.id),
+      uploads: allUploads.filter((u) => u.location_id === location.id),
+    };
+
+    // Step 4: Transform to LocationResponse format
+    return transformLocationToResponse(locationWithNested);
   }
 }

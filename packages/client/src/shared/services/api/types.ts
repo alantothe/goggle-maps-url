@@ -23,23 +23,23 @@ export interface SourceInfo {
 }
 
 export interface InstagramEmbed {
-  id: number;
+  id?: number;
   location_id: number;
-  username: string | null;
+  username: string;
   url: string;
   embed_code: string;
-  instagram: string | null;
-  images: string[];
-  original_image_urls: string[];
-  created_at: string;
+  instagram?: string | null;
+  images?: string[];
+  original_image_urls?: string[];
+  created_at?: string;
 }
 
 export interface Upload {
-  id: number;
+  id?: number;
   location_id: number;
-  photographerCredit: string | null;
-  images: string[];
-  created_at: string;
+  photographerCredit?: string | null;
+  images?: string[];
+  created_at?: string;
 }
 
 export interface Location {
@@ -66,6 +66,39 @@ export interface LocationBasic {
   name: string;
   location: string | null;
   category: Category;
+}
+
+export interface LocationContact {
+  countryCode: string | null;
+  phoneNumber: string | null;
+  website: string | null;
+  contactAddress: string | null;
+  url: string;
+}
+
+export interface LocationCoordinates {
+  lat: number | null;
+  lng: number | null;
+}
+
+export interface LocationSource {
+  name: string;
+  address: string;
+}
+
+export interface LocationResponse {
+  id: number;
+  title: string | null;
+  category: Category;
+  locationKey: string | null;
+  district: string | null;
+  contact: LocationContact;
+  coordinates: LocationCoordinates;
+  source: LocationSource;
+  instagram_embeds: InstagramEmbed[];
+  uploads: Upload[];
+  slug: string | null;
+  created_at: string;
 }
 
 export interface LocationsBasicResponse {

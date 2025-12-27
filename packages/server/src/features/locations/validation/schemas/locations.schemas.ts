@@ -19,7 +19,7 @@ export const deleteLocationSlugSchema = z.object({
 }).strict();
 
 export const deleteLocationIdSchema = z.object({
-  id: z.number()
+  id: z.coerce.number()
     .int("ID must be an integer")
     .positive("ID must be positive")
 }).strict();

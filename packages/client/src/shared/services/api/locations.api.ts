@@ -9,6 +9,7 @@ import type {
   LocationsBasicResponse,
   LocationEntryResponse,
   Location,
+  LocationResponse,
   CreateMapsRequest,
   UpdateMapsRequest,
   AddInstagramRequest,
@@ -105,6 +106,13 @@ export const locationsApi = {
    */
   async clearDatabase(): Promise<SuccessResponse> {
     return apiGet<SuccessResponse>(API_ENDPOINTS.CLEAR_DB);
+  },
+
+  /**
+   * Get a single location by ID with full details
+   */
+  async getLocationById(id: number): Promise<LocationResponse> {
+    return apiGet<LocationResponse>(API_ENDPOINTS.GET_LOCATION_BY_ID(id));
   },
 
   /**

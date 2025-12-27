@@ -7,6 +7,7 @@ Base URL: `http://localhost:3000`
 ### Location Management
 - `GET /api/locations` - List all locations
 - `GET /api/locations-basic` - List locations with basic info only
+- `GET /api/locations/:id` - Get single location by ID
 - `POST /api/locations` - Create new location
 - `PATCH /api/locations/:id` - Update location by ID
 - `DELETE /api/locations/:id` - Delete location by ID
@@ -108,6 +109,58 @@ GET /api/locations-basic?category=dining&locationKey=colombia|bogota
       "category": "dining"
     }
   ]
+}
+```
+
+---
+
+## GET /api/locations/:id
+
+Get a single location by its ID.
+
+**Path Parameters:**
+- `id` (number, required): Location ID returned from POST /api/locations
+
+**Example:**
+```bash
+GET /api/locations/1
+```
+
+**Response (Success - 200):**
+```json
+{
+  "location": {
+    "id": 1,
+    "title": "Display Title",
+    "category": "dining",
+    "locationKey": "peru|lima|miraflores",
+    "contact": {
+      "countryCode": "PE",
+      "phoneNumber": "+51 1 2425957",
+      "website": "https://panchita.pe/",
+      "contactAddress": "C. 2 de Mayo 298, Miraflores 15074, Peru",
+      "url": "https://www.google.com/maps/search/?api=1&query=..."
+    },
+    "coordinates": {
+      "lat": -12.1177544,
+      "lng": -77.03121370000001
+    },
+    "source": {
+      "name": "Panchita - Miraflores",
+      "address": "C. 2 de Mayo 298, Miraflores 15074, Peru"
+    },
+    "instagram_embeds": [],
+    "uploads": [],
+    "created_at": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+**Response (Not Found - 404):**
+```json
+{
+  "success": false,
+  "error": "Location not found"
 }
 ```
 

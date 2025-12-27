@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   // Location management
   LOCATIONS: "/api/locations",
   LOCATIONS_BASIC: "/api/locations-basic",
+  GET_LOCATION_BY_ID: (id: number) => `/api/locations/${id}`,
   CREATE_LOCATION: "/api/locations",
   UPDATE_LOCATION: (id: number) => `/api/locations/${id}`,
   DELETE_LOCATION: (id: number) => `/api/locations/${id}`,

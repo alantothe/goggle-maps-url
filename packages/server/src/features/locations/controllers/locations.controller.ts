@@ -47,3 +47,15 @@ export function deleteLocationById(c: Context) {
 
   return c.json(successResponse({ message: "Location deleted successfully" }));
 }
+
+export function getLocationById(c: Context) {
+  const dto = c.get("validatedParams") as DeleteLocationIdDto;
+
+  const location = container.locationQueryService.getLocationById(dto.id);
+
+  if (!location) {
+    return c.json(errorResponse("Location not found"), 404);
+  }
+
+  return c.json(location);
+}

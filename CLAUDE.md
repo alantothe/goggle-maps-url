@@ -68,7 +68,7 @@ url-util/
 ```
 packages/server/src/features/locations/
 ├── controllers/          # Thin HTTP handlers (consolidated files)
-│   ├── locations.controller.ts       # GET /api/locations
+│   ├── locations.controller.ts       # GET /api/locations, GET /api/locations/:id, DELETE /api/locations/:id
 │   ├── maps.controller.ts           # POST /api/add-maps, /api/update-maps
 │   ├── instagram.controller.ts      # POST /api/add-instagram
 │   ├── uploads.controller.ts        # POST /api/add-upload (multipart)
@@ -88,6 +88,7 @@ packages/server/src/features/locations/
 │   └── location-hierarchy.repository.ts
 ├── validation/          # Zod validation schemas
 │   └── schemas/
+│       ├── locations.schemas.ts     # GET query params, DELETE :id validation
 │       ├── maps.schemas.ts
 │       ├── instagram.schemas.ts
 │       └── uploads.schemas.ts
@@ -135,6 +136,12 @@ packages/client/src/
 ├── pages/              # Route pages (Home, AddLocation, etc.)
 └── index.css           # Tailwind directives and global styles
 ```
+
+**React Query Patterns:**
+- **Lazy Loading**: Use `enabled` flag for conditional data fetching (e.g., `useLocationDetail` only fetches when `isExpanded && id !== null`)
+- **Query Keys**: Use descriptive arrays for cache keys (e.g., `["location-detail", id]`)
+- **Export Query Keys**: Export constants like `LOCATION_DETAIL_QUERY_KEY` for invalidation in mutations
+- **Optimistic Updates**: Invalidate related queries after mutations to keep UI in sync
 
 ### Shared Package
 
@@ -368,6 +375,18 @@ export class ResourceService {
 2. `location-query.service.ts` joins all three tables
 3. Transforms flat database rows to `LocationResponse` format
 4. Returns `locations` array with nested structure (contact, coordinates, source, instagram_embeds, uploads)
+
+**Filtering locations:**
+1. GET `/api/locations?category=dining&locationKey=colombia|bogota`
+2. Query params validated via `listLocationsQuerySchema` (Zod)
+3. `location-query.service.ts` filters by category and/or locationKey scope
+4. Returns filtered `locations` array matching criteria
+
+**Fetching single location:**
+1. GET `/api/locations/:id` with numeric ID parameter
+2. Validated via `deleteLocationIdSchema` (Zod)
+3. `location-query.service.ts` fetches by ID, joins embeds/uploads
+4. Returns `LocationResponse` or 404 if not found
 
 ## API Response Format
 
