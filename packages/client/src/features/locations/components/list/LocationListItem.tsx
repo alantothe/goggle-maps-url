@@ -4,6 +4,17 @@ import { formatLocationHierarchy } from "@client/shared/lib/utils";
 import { useLocationDetail } from "../../hooks";
 import { useToast } from "@client/shared/hooks/useToast";
 import { truncateUrl } from "../../utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@client/components/ui";
+import { useDeleteLocation } from "@client/shared/services/api/hooks";
 
 function getCategoryBadgeStyles(category: string) {
   const categoryLower = category.toLowerCase();
@@ -35,9 +46,11 @@ interface LocationListItemProps {
 export function LocationListItem({ location, onClick }: LocationListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { data: locationDetail, isLoading, error } = useLocationDetail(isExpanded ? location.id : null);
   const { showToast } = useToast();
+  const deleteLocationMutation = useDeleteLocation();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -71,6 +84,23 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
       });
     } catch (error) {
       console.error('Failed to copy text: ', error);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(false); // Close the menu
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteLocationMutation.mutateAsync(location.id);
+      showToast('Location deleted successfully', { x: window.innerWidth / 2, y: 100 });
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to delete location:', error);
+      showToast('Failed to delete location', { x: window.innerWidth / 2, y: 100 });
     }
   };
 
@@ -113,10 +143,7 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
               </button>
               <button
                 className="w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Handle delete action here
-                }}
+                onClick={handleDeleteClick}
               >
                 Delete
               </button>
@@ -272,6 +299,27 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
           )}
         </div>
       )}
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Location</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{location.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteLocationMutation.isPending}
+            >
+              {deleteLocationMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
