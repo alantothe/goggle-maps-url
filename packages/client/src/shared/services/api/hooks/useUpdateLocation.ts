@@ -1,0 +1,19 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { locationsApi } from "../locations.api";
+import { LOCATIONS_QUERY_KEY } from "./useLocations";
+import { LOCATION_BY_ID_QUERY_KEY } from "./useLocationById";
+import type { UpdateMapsRequest } from "../types";
+
+export function useUpdateLocation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateMapsRequest }) =>
+      locationsApi.updateLocation(id, data),
+    onSuccess: (_data, { id }) => {
+      // Invalidate and refetch locations and the specific location
+      queryClient.invalidateQueries({ queryKey: LOCATIONS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: LOCATION_BY_ID_QUERY_KEY(id) });
+    },
+  });
+}

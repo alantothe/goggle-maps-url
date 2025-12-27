@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@client/shared/components/layout";
-import { Home, AddLocation, ButtonTest } from "@client/features/locations";
+import { Home, AddLocation, EditLocation, ButtonTest } from "@client/features/locations";
 import { TaxonomyReview } from "@client/features/admin/pages/TaxonomyReview";
 
 function App() {
@@ -12,6 +12,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/add" element={<AddLocation />} />
+            <Route path="/edit/:id" element={<EditLocation />} />
             <Route path="/button-test" element={<ButtonTest />} />
             <Route path="/admin/taxonomy" element={<TaxonomyReview />} />
           </Routes>

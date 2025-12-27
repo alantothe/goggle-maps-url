@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { formatLocationHierarchy } from "@client/shared/lib/utils";
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ interface LocationListItemProps {
 
 export function LocationListItem({ location, onClick }: LocationListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
 
   // Custom hooks
   const { data: locationDetail, isLoading, error } = useLocationDetail(isExpanded ? location.id : null);
@@ -46,7 +48,6 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
     isDeleting,
   } = useLocationDelete({
     locationId: location.id,
-    locationName: location.name,
     onMenuClose: closeMenu,
   });
 
@@ -61,7 +62,7 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     closeMenu();
-    // TODO: Implement edit functionality
+    navigate(`/edit/${location.id}`);
   };
 
   return (

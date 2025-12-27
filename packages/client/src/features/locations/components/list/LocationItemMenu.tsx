@@ -1,5 +1,5 @@
 import { Settings } from "lucide-react";
-import { RefObject } from "react";
+import { type RefObject } from "react";
 
 interface LocationItemMenuProps {
   isOpen: boolean;

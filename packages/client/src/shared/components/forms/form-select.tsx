@@ -30,10 +30,13 @@ export function FormSelect({
       {(field, fieldState) => {
         const { onChange, onBlur, value, ref, ...fieldRest } = field;
 
+        console.log(`🔍 FormSelect[${name}] - value:`, value, typeof value);
+
         return (
           <Select
+            key={`${name}-${value || 'unset'}`}
             {...fieldRest}
-            value={value}
+            value={value ?? undefined}
             onValueChange={onChange}
             aria-invalid={fieldState.invalid}
           >

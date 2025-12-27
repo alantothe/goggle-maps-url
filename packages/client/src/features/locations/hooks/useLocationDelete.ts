@@ -4,18 +4,16 @@ import { useDeleteLocation } from "@client/shared/services/api/hooks";
 
 interface UseLocationDeleteProps {
   locationId: number;
-  locationName: string;
   onMenuClose: () => void;
 }
 
 /**
  * Hook for managing location deletion with confirmation dialog
  * @param locationId - ID of the location to delete
- * @param locationName - Name of the location (for confirmation message)
  * @param onMenuClose - Callback to close the settings menu
  * @returns Delete dialog state, handlers, and loading state
  */
-export function useLocationDelete({ locationId, locationName, onMenuClose }: UseLocationDeleteProps) {
+export function useLocationDelete({ locationId, onMenuClose }: UseLocationDeleteProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { showToast } = useToast();
   const deleteLocationMutation = useDeleteLocation();
