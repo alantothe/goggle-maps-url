@@ -36,7 +36,7 @@ export function TaxonomyReview() {
     <div className="container mx-auto py-8 px-4">
       <div data-theme="light" className="bg-background rounded-lg shadow-lg p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 text-foreground">Taxonomy Review</h1>
+          <h1 className="text-[24px]! font-bold mb-2 text-foreground">Taxonomy Review</h1>
           <p className="text-muted-foreground">
             Review and approve new neighborhoods discovered from location data.
             Only approved neighborhoods appear in public filters.
