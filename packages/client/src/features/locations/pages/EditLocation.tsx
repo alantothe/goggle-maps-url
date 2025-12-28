@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Pencil } from "lucide-react";
 import { editLocationSchema, type EditLocationFormData } from "../validation/edit-location.schema";
 import { useLocationById, useUpdateLocation } from "@client/shared/services/api";
 import { FormInput, FormSelect } from "@client/shared/components/forms";
@@ -85,11 +86,18 @@ export function EditLocation() {
   }
 
   return (
-    <div>
-      <h1>Edit Location</h1>
-      <p className="text-gray-600 mb-4">Editing: {location.title || location.source.name}</p>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-background" data-theme="dark">
+      <div className="w-full max-w-sm bg-background rounded-xl p-6 animate-in fade-in slide-in-from-bottom-4 duration-500" data-theme="light">
+        <div className="flex items-center gap-2.5 mb-6">
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+            <Pencil className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <h1 className="text-[24px]! opacity-70 font-medium text-foreground">
+            Edit Location
+          </h1>
+        </div>
 
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="mt-8 max-w-2xl space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormInput
           name="title"
           label="Title"
@@ -137,35 +145,36 @@ export function EditLocation() {
           placeholder="Website URL (optional)"
         />
 
-        <div className="flex gap-4">
+        <div className="space-y-2 mt-6">
           <SubmitButton
             isLoading={isPending}
             submitText="Update Location"
             submittingText="Updating Location..."
             disabled={!form.formState.isDirty}
-            className="w-auto"
+            className="w-full h-10 text-sm font-normal bg-primary text-primary-foreground hover:bg-primary/90"
           />
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            className="w-full h-10 text-sm font-normal bg-secondary text-secondary-foreground hover:bg-secondary/90 border border-border rounded-md"
           >
             Cancel
           </button>
         </div>
 
         {updateError && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
             Error: {updateError.message}
           </div>
         )}
 
         {isSuccess && (
-          <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-500">
+          <div className="rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-600">
             Location updated successfully! Redirecting...
           </div>
         )}
       </form>
+      </div>
     </div>
   );
 }
