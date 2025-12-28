@@ -18,19 +18,19 @@ export function LocationItemMenu({ isOpen, onToggle, onEdit, onDelete, menuRef }
     <div className="relative" ref={menuRef}>
       <Settings
         size={16}
-        className="text-black cursor-pointer"
+        className="text-foreground cursor-pointer"
         onClick={onToggle}
       />
       {isOpen && (
-        <div className="absolute right-full mr-2 top-0 z-10 bg-white border border-gray-200 rounded py-0.5 min-w-[80px] max-h-[77px]">
+        <div data-theme="light" className="absolute right-full mr-2 top-0 z-10 bg-background border border-border rounded py-0.5 min-w-[80px] max-h-[77px]">
           <button
-            className="w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full text-left px-2 py-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={onEdit}
           >
             Edit
           </button>
           <button
-            className="w-full text-left px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full text-left px-2 py-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={onDelete}
           >
             Delete

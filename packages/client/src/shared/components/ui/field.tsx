@@ -5,7 +5,7 @@ import { cn } from "../../lib/utils";
 import { Label } from "@client/components/ui";
 
 const fieldVariants = cva(
-  "flex flex-col gap-2",
+  "flex flex-col space-y-1.5",
   {
     variants: {
       orientation: {
@@ -38,7 +38,7 @@ const FieldLabel = React.forwardRef<
   React.ComponentRef<typeof Label>,
   React.ComponentPropsWithoutRef<typeof Label>
 >(({ className, ...props }, ref) => (
-  <Label ref={ref} className={cn("", className)} {...props} />
+  <Label ref={ref} className={cn("text-xs text-muted-foreground", className)} {...props} />
 ));
 FieldLabel.displayName = "FieldLabel";
 

@@ -20,12 +20,12 @@ interface DetailFieldProps {
  */
 export function DetailField({ label, value, onClick, title, className, valueClassName }: DetailFieldProps) {
   const defaultValueClassName = onClick
-    ? "text-sm text-gray-900 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
-    : "text-sm text-gray-900";
+    ? "text-sm text-foreground cursor-pointer underline underline-offset-2 decoration-muted-foreground hover:decoration-foreground transition-colors"
+    : "text-sm text-foreground";
 
   return (
     <div className={className || "flex items-baseline gap-2"}>
-      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-fit">
+      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider min-w-fit">
         {label}:
       </span>
       <span

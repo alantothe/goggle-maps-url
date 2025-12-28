@@ -66,18 +66,18 @@ export function LocationListItem({ location, onClick }: LocationListItemProps) {
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg p-4 bg-white transition-all duration-200 hover:shadow-sm hover:border-gray-400">
+    <div data-theme="light" className="border border-border rounded-lg p-4 bg-background transition-all duration-200 hover:shadow-sm hover:border-border">
       {/* Header Section */}
       <div
         className="flex items-start justify-between gap-3 cursor-pointer"
         onClick={handleClick}
       >
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 text-base leading-tight truncate">
+          <h3 className="font-medium text-foreground text-base leading-tight truncate">
             {location.name}
           </h3>
           {location.location && (
-            <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
               {formatLocationHierarchy(location.location)}
             </p>
           )}

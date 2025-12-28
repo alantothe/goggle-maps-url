@@ -34,10 +34,10 @@ export function TaxonomyReview() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+      <div data-theme="light" className="bg-background rounded-lg shadow-lg p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Taxonomy Review</h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h1 className="text-3xl font-bold mb-2 text-foreground">Taxonomy Review</h1>
+          <p className="text-muted-foreground">
             Review and approve new neighborhoods discovered from location data.
             Only approved neighborhoods appear in public filters.
           </p>
@@ -52,39 +52,39 @@ export function TaxonomyReview() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
           </div>
         ) : pendingEntries && pendingEntries.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-green-500 text-6xl mb-4">✓</div>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               No pending taxonomy entries. All neighborhoods are approved!
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     LocationKey
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Locations Using
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200">
+              <tbody className="bg-background divide-y divide-border">
                 {pendingEntries?.map((entry) => (
-                  <tr key={entry.locationKey} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr key={entry.locationKey} className="hover:bg-accent">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                      <code className="text-xs bg-muted px-2 py-1 rounded">
                         {formatLocationHierarchy(entry.locationKey)}
                       </code>
                     </td>
