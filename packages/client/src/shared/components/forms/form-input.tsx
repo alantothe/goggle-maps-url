@@ -8,6 +8,8 @@ export interface FormInputProps extends React.InputHTMLAttributes<HTMLInputEleme
   label: string;
   control: Control<any>;
   description?: string;
+  onPaste?: (event: React.ClipboardEvent<HTMLInputElement>) => void;
+  onInput?: (event: React.FormEvent<HTMLInputElement>) => void;
 }
 
 export function FormInput({
@@ -15,6 +17,8 @@ export function FormInput({
   label,
   control,
   description,
+  onPaste,
+  onInput,
   ...inputProps
 }: FormInputProps) {
   return (
@@ -29,6 +33,8 @@ export function FormInput({
           id={field.name}
           {...field}
           {...inputProps}
+          onPaste={onPaste}
+          onInput={onInput}
           aria-invalid={fieldState.invalid}
         />
       )}

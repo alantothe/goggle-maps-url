@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -18,7 +18,7 @@ import {
 } from "@client/components/ui/alert-dialog";
 import { FormInput, FormSelect } from "@client/shared/components/forms";
 import { SelectItem } from "@client/components/ui/select";
-import { formatLocationHierarchy } from "@client/shared/lib/utils";
+import { handleSlugifyInput } from "@client/shared/lib/utils";
 import type { TaxonomyCorrectionRequest } from "@client/shared/services/api/types";
 
 const correctionSchema = z.object({
@@ -39,26 +39,61 @@ type CorrectionFormData = z.infer<typeof correctionSchema>;
 interface CorrectionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultValues?: {
-    incorrect_value: string;
-    part_type: "country" | "city" | "neighborhood";
-  };
+  locationKey?: string;
+  defaultPartType?: "country" | "city" | "neighborhood";
 }
 
-export function CorrectionModal({ open, onOpenChange, defaultValues }: CorrectionModalProps) {
+/**
+ * Extract a specific part from a locationKey string
+ * @param locationKey - Pipe-delimited string (e.g., "brazil|bras-lia|asa-sul")
+ * @param partType - Which part to extract
+ * @returns The extracted part or empty string
+ */
+function extractPartFromLocationKey(
+  locationKey: string,
+  partType: "country" | "city" | "neighborhood"
+): string {
+  const parts = locationKey.split("|");
+  switch (partType) {
+    case "country":
+      return parts[0] || "";
+    case "city":
+      return parts[1] || "";
+    case "neighborhood":
+      return parts[2] || "";
+    default:
+      return "";
+  }
+}
+
+export function CorrectionModal({ open, onOpenChange, locationKey, defaultPartType }: CorrectionModalProps) {
   const [showPreview, setShowPreview] = useState(false);
 
-  const { control, handleSubmit, reset, getValues, trigger } = useForm<CorrectionFormData>({
+  const { control, handleSubmit, reset, getValues, trigger, setValue } = useForm<CorrectionFormData>({
     resolver: zodResolver(correctionSchema),
-    defaultValues: defaultValues || {
-      incorrect_value: "",
+    defaultValues: {
+      incorrect_value: locationKey && defaultPartType
+        ? extractPartFromLocationKey(locationKey, defaultPartType)
+        : "",
       correct_value: "",
-      part_type: "city",
+      part_type: defaultPartType || "city",
     },
   });
 
   const previewMutation = usePreviewTaxonomyCorrection();
   const createMutation = useCreateTaxonomyCorrection();
+
+  // Watch for part_type changes and auto-populate incorrect_value
+  const partTypeValue = useWatch({ control, name: "part_type" });
+
+  useEffect(() => {
+    if (locationKey && partTypeValue) {
+      const extractedValue = extractPartFromLocationKey(locationKey, partTypeValue);
+      if (extractedValue) {
+        setValue("incorrect_value", extractedValue, { shouldValidate: false });
+      }
+    }
+  }, [locationKey, partTypeValue, setValue]);
 
   const handlePreview = async () => {
     const isValid = await trigger();
@@ -118,6 +153,7 @@ export function CorrectionModal({ open, onOpenChange, defaultValues }: Correctio
               label="Correct Value"
               control={control}
               placeholder="brasilia"
+              onInput={handleSlugifyInput}
             />
             <FormSelect
               name="part_type"
@@ -148,7 +184,7 @@ export function CorrectionModal({ open, onOpenChange, defaultValues }: Correctio
                     <ul className="list-disc list-inside space-y-1">
                       {previewMutation.data.pendingTaxonomySamples.slice(0, 3).map((key) => (
                         <li key={key} className="text-xs font-mono">
-                          {formatLocationHierarchy(key)}
+                          {key}
                         </li>
                       ))}
                     </ul>

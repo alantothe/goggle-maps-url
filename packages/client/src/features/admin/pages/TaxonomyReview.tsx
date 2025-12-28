@@ -26,10 +26,8 @@ export function TaxonomyReview() {
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalDefaults, setModalDefaults] = useState<{
-    incorrect_value: string;
-    part_type: "country" | "city" | "neighborhood";
-  } | undefined>(undefined);
+  const [selectedLocationKey, setSelectedLocationKey] = useState<string | undefined>(undefined);
+  const [defaultPartType, setDefaultPartType] = useState<"country" | "city" | "neighborhood">("city");
 
   // Pending taxonomy handlers
   const handleApprove = async (locationKey: string) => {
@@ -52,16 +50,9 @@ export function TaxonomyReview() {
   };
 
   const handleQuickFill = (locationKey: string) => {
-    const parts = locationKey.split("|");
-
-    // Pre-fill with city (most common case)
-    if (parts[1]) {
-      setModalDefaults({
-        incorrect_value: parts[1],
-        part_type: "city"
-      });
-      setModalOpen(true);
-    }
+    setSelectedLocationKey(locationKey);
+    setDefaultPartType("city"); // Default to city as most common case
+    setModalOpen(true);
   };
 
   return (
@@ -118,7 +109,7 @@ export function TaxonomyReview() {
                   <tr key={entry.locationKey} className="hover:bg-accent">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <code className="text-xs bg-muted px-2 py-1 rounded text-foreground">
-                        {formatLocationHierarchy(entry.locationKey)}
+                        {entry.locationKey}
                       </code>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -283,7 +274,8 @@ export function TaxonomyReview() {
       <CorrectionModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        defaultValues={modalDefaults}
+        locationKey={selectedLocationKey}
+        defaultPartType={defaultPartType}
       />
     </div>
   );
