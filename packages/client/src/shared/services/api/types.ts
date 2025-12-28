@@ -229,3 +229,14 @@ export interface TaxonomyEntryResponse {
     };
   };
 }
+
+export interface TaxonomyCorrectionRequest {
+  incorrect_value: string;
+  correct_value: string;
+  part_type: "country" | "city" | "neighborhood";
+}
+
+export interface TaxonomyCorrection extends TaxonomyCorrectionRequest {
+  id: number;
+  created_at: string;
+}

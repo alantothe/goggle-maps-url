@@ -10,3 +10,5 @@ export function useLocationById(id: number | null) {
     enabled: id !== null,
   });
 }
+
+

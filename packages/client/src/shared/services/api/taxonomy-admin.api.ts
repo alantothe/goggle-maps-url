@@ -2,11 +2,13 @@
  * Taxonomy admin API
  */
 
-import { apiGet, apiPatch, apiDelete } from "./client";
+import { apiGet, apiPatch, apiDelete, apiPost } from "./client";
 import { API_ENDPOINTS } from "./config";
 import type {
   PendingTaxonomyEntry,
   SuccessResponse,
+  TaxonomyCorrection,
+  TaxonomyCorrectionRequest,
 } from "./types";
 
 /**
@@ -56,6 +58,36 @@ export const taxonomyAdminApi = {
   async rejectEntry(locationKey: string): Promise<void> {
     await apiDelete<SuccessResponse>(
       API_ENDPOINTS.ADMIN_TAXONOMY_REJECT(locationKey)
+    );
+  },
+
+  /**
+   * Get all taxonomy correction rules
+   */
+  async getCorrections(): Promise<TaxonomyCorrection[]> {
+    const response = await apiGet<{ corrections: TaxonomyCorrection[] }>(
+      API_ENDPOINTS.ADMIN_TAXONOMY_CORRECTIONS
+    );
+    return response.corrections;
+  },
+
+  /**
+   * Create a new taxonomy correction rule
+   */
+  async createCorrection(data: TaxonomyCorrectionRequest): Promise<TaxonomyCorrection> {
+    const response = await apiPost<{ correction: TaxonomyCorrection }>(
+      API_ENDPOINTS.ADMIN_TAXONOMY_CORRECTIONS,
+      data
+    );
+    return response.correction;
+  },
+
+  /**
+   * Delete a taxonomy correction rule
+   */
+  async deleteCorrection(id: number): Promise<void> {
+    await apiDelete<SuccessResponse>(
+      API_ENDPOINTS.ADMIN_TAXONOMY_CORRECTION_DELETE(id)
     );
   },
 };

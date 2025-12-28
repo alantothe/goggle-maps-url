@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
   ADMIN_TAXONOMY_PENDING: "/api/admin/taxonomy/pending",
   ADMIN_TAXONOMY_APPROVE: (locationKey: string) => `/api/admin/taxonomy/${encodeURIComponent(locationKey)}/approve`,
   ADMIN_TAXONOMY_REJECT: (locationKey: string) => `/api/admin/taxonomy/${encodeURIComponent(locationKey)}/reject`,
+  ADMIN_TAXONOMY_CORRECTIONS: "/api/admin/taxonomy/corrections",
+  ADMIN_TAXONOMY_CORRECTION_DELETE: (id: number) => `/api/admin/taxonomy/corrections/${id}`,
 
   // Files
   OPEN_FOLDER: "/api/open-folder",

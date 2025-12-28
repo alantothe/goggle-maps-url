@@ -10,3 +10,9 @@ export {
   useRejectTaxonomy,
   PENDING_TAXONOMY_QUERY_KEY,
 } from "./usePendingTaxonomy";
+export {
+  useTaxonomyCorrections,
+  useCreateTaxonomyCorrection,
+  useDeleteTaxonomyCorrection,
+  TAXONOMY_CORRECTIONS_QUERY_KEY,
+} from "./useTaxonomyCorrections";
