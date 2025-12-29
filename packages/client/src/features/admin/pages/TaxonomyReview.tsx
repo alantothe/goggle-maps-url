@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   usePendingTaxonomy,
   useApproveTaxonomy,
@@ -9,6 +9,8 @@ import {
 import { Button } from "@client/components/ui/button";
 import { formatLocationHierarchy } from "@client/shared/lib/utils";
 import { CorrectionModal } from "../components/CorrectionModal";
+import { TaxonomyFilters } from "../components/TaxonomyFilters";
+import { filterTaxonomyEntries } from "../utils/taxonomy-filter-utils";
 
 export function TaxonomyReview() {
   // Pending taxonomy state
@@ -28,6 +30,21 @@ export function TaxonomyReview() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLocationKey, setSelectedLocationKey] = useState<string | undefined>(undefined);
   const [defaultPartType, setDefaultPartType] = useState<"country" | "city" | "neighborhood">("city");
+
+  // Filter state for Approved Taxonomy
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(null);
+
+  // Add filtering logic with memoization
+  const filteredLocations = useMemo(() => {
+    if (!approvedData?.locations) return [];
+    return filterTaxonomyEntries(approvedData.locations, {
+      country: selectedCountry,
+      city: selectedCity,
+      neighborhood: selectedNeighborhood
+    });
+  }, [approvedData?.locations, selectedCountry, selectedCity, selectedNeighborhood]);
 
   // Pending taxonomy handlers
   const handleApprove = async (locationKey: string) => {
@@ -53,6 +70,28 @@ export function TaxonomyReview() {
     setSelectedLocationKey(locationKey);
     setDefaultPartType("city"); // Default to city as most common case
     setModalOpen(true);
+  };
+
+  // Cascading filter handlers
+  const handleCountryChange = (country: string) => {
+    setSelectedCountry(country);
+    setSelectedCity(null);
+    setSelectedNeighborhood(null);
+  };
+
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    setSelectedNeighborhood(null);
+  };
+
+  const handleNeighborhoodChange = (neighborhood: string) => {
+    setSelectedNeighborhood(neighborhood);
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCountry(null);
+    setSelectedCity(null);
+    setSelectedNeighborhood(null);
   };
 
   return (
@@ -241,28 +280,54 @@ export function TaxonomyReview() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
           </div>
         ) : approvedData?.locations && approvedData.locations.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    LocationKey
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-background divide-y divide-border">
-                {approvedData.locations.map((location) => (
-                  <tr key={location.locationKey} className="hover:bg-accent">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <code className="text-xs bg-muted px-2 py-1 rounded text-foreground">
-                        {location.locationKey}
-                      </code>
-                    </td>
+          <>
+            {/* Add filters above the table */}
+            <TaxonomyFilters
+              locations={approvedData.locations}
+              selectedCountry={selectedCountry}
+              selectedCity={selectedCity}
+              selectedNeighborhood={selectedNeighborhood}
+              onCountryChange={handleCountryChange}
+              onCityChange={handleCityChange}
+              onNeighborhoodChange={handleNeighborhoodChange}
+              onClearFilters={handleClearFilters}
+            />
+
+            {/* Show filtered count */}
+            <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
+              Showing {filteredLocations.length} of {approvedData.locations.length} entries
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      LocationKey
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-background divide-y divide-border">
+                  {filteredLocations.map((location) => (
+                    <tr key={location.locationKey} className="hover:bg-accent">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <code className="text-xs bg-muted px-2 py-1 rounded text-foreground">
+                          {location.locationKey}
+                        </code>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Empty state when filters return no results */}
+            {filteredLocations.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                No taxonomy entries match the selected filters.
+              </p>
+            )}
+          </>
         ) : (
           <p className="text-center text-muted-foreground py-4">
             No approved taxonomy entries yet. Approve pending entries above to populate this list.
