@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@client/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@client/components/ui/dialog";
 import { Button } from "@client/components/ui/button";
 import { ChevronLeft, ChevronRight, X, ExternalLink, Code } from "lucide-react";
 import type { ImageMetadata } from "@client/shared/services/api/types";
@@ -42,6 +42,12 @@ export function ImageLightbox({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl p-0 bg-black/95 border-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Image Viewer</DialogTitle>
+          <DialogDescription>
+            View images with navigation controls and metadata information
+          </DialogDescription>
+        </DialogHeader>
         {/* Close button */}
         <Button
           variant="ghost"
@@ -93,7 +99,7 @@ export function ImageLightbox({
               </p>
 
               {/* Metadata row */}
-              {imageMetadata && imageMetadata[currentIndex] && (
+              {imageMetadata && currentIndex < imageMetadata.length && imageMetadata[currentIndex] && (
                 <div className="flex items-center justify-center gap-4 text-xs text-gray-300 mb-2">
                   <span>
                     {imageMetadata[currentIndex].width} × {imageMetadata[currentIndex].height}px

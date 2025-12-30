@@ -26,13 +26,25 @@ export async function extractImageMetadata(filePath: string): Promise<ImageMetad
     const image = sharp(filePath);
     const metadata = await image.metadata();
 
+    // Validate that we got valid dimensions
+    if (!metadata.width || !metadata.height) {
+      throw new Error(`Could not determine image dimensions for: ${filePath}`);
+    }
+
     return {
-      width: metadata.width || 0,
-      height: metadata.height || 0,
+      width: metadata.width,
+      height: metadata.height,
       size: fileStats.size,
       format: normalizeFormat(metadata.format),
     };
   } catch (error) {
+    // Provide specific error messages for common failure modes
+    if (error.code === 'ENOENT') {
+      throw new Error(`File not found: ${filePath}`);
+    }
+    if (error.message?.includes('Input buffer') || error.message?.includes('unsupported')) {
+      throw new Error(`Invalid or corrupted image file: ${filePath}`);
+    }
     console.error(`Failed to extract metadata from ${filePath}:`, error);
     throw error;
   }

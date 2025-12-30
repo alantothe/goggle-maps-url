@@ -7,6 +7,7 @@ import { saveUpload } from "../repositories/upload.repository";
 import { createFromUpload, createFromImageSetUpload } from "./location.helper";
 import { extractImageMetadata } from "../utils/image-metadata-extractor";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 import { VARIANT_SPECS as VARIANT_SPECS_IMPORT } from "@url-util/shared";
 
 export class UploadsService {
@@ -168,7 +169,8 @@ export class UploadsService {
     }
 
     // 5. Extract source metadata
-    const sourceMeta = await this.extractMetadataFromFile(sourceFilePath);
+    const sourceRelativePath = sourceFilePath.replace(process.cwd() + "/", "");
+    const sourceMeta = await this.extractMetadataFromFile(sourceRelativePath);
 
     // 6. Save all variant files and extract metadata
     const variants: ImageVariant[] = [];
@@ -181,10 +183,10 @@ export class UploadsService {
       try {
         await this.saveFileToPath(file, variantFilePath);
 
-        const meta = await this.extractMetadataFromFile(variantFilePath);
-
         // Get relative path from cwd
         const relativePath = variantFilePath.replace(process.cwd() + "/", "");
+
+        const meta = await this.extractMetadataFromFile(relativePath);
 
         variants.push({
           type,
@@ -252,16 +254,21 @@ export class UploadsService {
   private async extractMetadataFromFile(filePath: string): Promise<ImageMetadata> {
     try {
       const fullPath = join(process.cwd(), filePath);
+
+      // Check if file exists before attempting extraction
+      if (!existsSync(fullPath)) {
+        throw new BadRequestError(`Image file not found at: ${filePath}`);
+      }
+
+      console.log(`Extracting metadata from: ${fullPath}`);
       const meta = await extractImageMetadata(fullPath);
+      console.log(`✓ Metadata extracted: ${meta.width}x${meta.height}, ${meta.size} bytes, ${meta.format}`);
+
       return meta;
     } catch (error) {
       console.error(`Failed to extract metadata for ${filePath}:`, error);
-      return {
-        width: 0,
-        height: 0,
-        size: 0,
-        format: "unknown",
-      };
+      // Throw error instead of returning zeros to prevent bad data from being saved
+      throw new BadRequestError(`Failed to extract image metadata: ${error.message}`);
     }
   }
 }
