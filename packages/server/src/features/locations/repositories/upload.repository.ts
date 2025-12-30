@@ -5,6 +5,7 @@ function mapRow(row: any): Upload {
   return {
     ...row,
     images: row.images ? JSON.parse(row.images) : [],
+    imageMetadata: row.imageMetadata ? JSON.parse(row.imageMetadata) : [],
     photographerCredit: row.photographerCredit || null,
   };
 }
@@ -18,7 +19,8 @@ export function saveUpload(upload: Upload): number | boolean {
       const query = db.query(`
         UPDATE uploads
         SET photographerCredit = $photographerCredit,
-            images = $images
+            images = $images,
+            imageMetadata = $imageMetadata
         WHERE id = $id
       `);
 
@@ -26,20 +28,22 @@ export function saveUpload(upload: Upload): number | boolean {
         $id: upload.id,
         $photographerCredit: upload.photographerCredit || null,
         $images: upload.images ? JSON.stringify(upload.images) : null,
+        $imageMetadata: upload.imageMetadata ? JSON.stringify(upload.imageMetadata) : null,
       });
 
       return upload.id;
     } else {
       // Insert new upload
       const query = db.query(`
-        INSERT INTO uploads (location_id, photographerCredit, images)
-        VALUES ($location_id, $photographerCredit, $images)
+        INSERT INTO uploads (location_id, photographerCredit, images, imageMetadata)
+        VALUES ($location_id, $photographerCredit, $images, $imageMetadata)
       `);
 
       query.run({
         $location_id: upload.location_id,
         $photographerCredit: upload.photographerCredit || null,
         $images: upload.images ? JSON.stringify(upload.images) : null,
+        $imageMetadata: upload.imageMetadata ? JSON.stringify(upload.imageMetadata) : null,
       });
 
       const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -54,7 +58,7 @@ export function saveUpload(upload: Upload): number | boolean {
 export function getUploadById(id: number): Upload | null {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, photographerCredit, images, created_at
+    SELECT id, location_id, photographerCredit, images, imageMetadata, created_at
     FROM uploads
     WHERE id = $id
   `);
@@ -66,7 +70,7 @@ export function getUploadById(id: number): Upload | null {
 export function getUploadsByLocationId(locationId: number): Upload[] {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, photographerCredit, images, created_at
+    SELECT id, location_id, photographerCredit, images, imageMetadata, created_at
     FROM uploads
     WHERE location_id = $locationId
     ORDER BY created_at DESC
@@ -78,7 +82,7 @@ export function getUploadsByLocationId(locationId: number): Upload[] {
 export function getAllUploads(): Upload[] {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, photographerCredit, images, created_at
+    SELECT id, location_id, photographerCredit, images, imageMetadata, created_at
     FROM uploads
     ORDER BY created_at DESC
   `);

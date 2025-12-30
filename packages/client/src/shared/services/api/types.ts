@@ -34,11 +34,19 @@ export interface InstagramEmbed {
   created_at?: string;
 }
 
+export interface ImageMetadata {
+  width: number;
+  height: number;
+  size: number; // bytes
+  format: string; // 'jpeg', 'png', 'webp', 'gif'
+}
+
 export interface Upload {
   id?: number;
   location_id: number;
   photographerCredit?: string | null;
   images?: string[];
+  imageMetadata?: ImageMetadata[]; // Metadata for each image (parallel array)
   created_at?: string;
 }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { LocationResponse, Upload } from "@client/shared/services/api/types";
+import type { LocationResponse, Upload, ImageMetadata } from "@client/shared/services/api/types";
 import { truncateUrl } from "../../utils";
 import { DetailField } from "./DetailField";
 import { AddInstagramEmbedForm } from "../forms/AddInstagramEmbedForm";
@@ -28,6 +28,7 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
     images: [] as string[],
     currentIndex: 0,
     photographerCredit: undefined as string | undefined,
+    imageMetadata: undefined as ImageMetadata[] | undefined,
   });
 
   const deleteMutation = useDeleteUpload({
@@ -48,6 +49,7 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
       images: upload.images || [],
       currentIndex: imageIndex,
       photographerCredit: upload.photographerCredit || undefined,
+      imageMetadata: upload.imageMetadata,
     });
   }
 
@@ -272,6 +274,7 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
           onNext={handleLightboxNext}
           onPrevious={handleLightboxPrevious}
           photographerCredit={lightboxState.photographerCredit}
+          imageMetadata={lightboxState.imageMetadata}
         />
       )}
     </div>

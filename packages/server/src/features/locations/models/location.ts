@@ -68,6 +68,17 @@ export interface InstagramEmbed {
 }
 
 /**
+ * Image Metadata
+ * File information for uploaded images
+ */
+export interface ImageMetadata {
+  width: number;
+  height: number;
+  size: number; // bytes
+  format: string; // 'jpeg', 'png', 'webp', 'gif'
+}
+
+/**
  * Upload
  * Represents directly uploaded images for a location
  */
@@ -76,6 +87,7 @@ export interface Upload {
   location_id: number;  // FK to locations table
   photographerCredit?: string | null;  // Optional photographer attribution
   images?: string[];
+  imageMetadata?: ImageMetadata[];  // Metadata for each image (parallel array)
   created_at?: string;
 }
 

@@ -1,9 +1,11 @@
-import type { Upload } from "../models/location";
+import type { Upload, ImageMetadata } from "../models/location";
 import { BadRequestError, NotFoundError } from "@shared/errors/http-error";
 import { ImageStorageService } from "@server/shared/services/storage/image-storage.service";
 import { getLocationById } from "../repositories/location.repository";
 import { saveUpload } from "../repositories/upload.repository";
 import { createFromUpload } from "./location.helper";
+import { extractImageMetadata } from "../utils/image-metadata-extractor";
+import { join } from "node:path";
 
 export class UploadsService {
   constructor(
@@ -56,6 +58,30 @@ export class UploadsService {
 
     if (savedPaths.length > 0) {
       entry.images = savedPaths;
+
+      // Extract metadata for each saved image
+      const metadata: ImageMetadata[] = [];
+      for (const path of savedPaths) {
+        // Construct absolute path - savedPaths are relative to cwd
+        const fullPath = join(process.cwd(), path);
+        try {
+          console.log(`Extracting metadata from: ${fullPath}`);
+          const meta = await extractImageMetadata(fullPath);
+          console.log(`Metadata extracted:`, meta);
+          metadata.push(meta);
+        } catch (error) {
+          console.error(`Failed to extract metadata for ${path}:`, error);
+          // Push default metadata on error
+          metadata.push({
+            width: 0,
+            height: 0,
+            size: 0,
+            format: "unknown",
+          });
+        }
+      }
+
+      entry.imageMetadata = metadata;
       saveUpload(entry);
     }
 

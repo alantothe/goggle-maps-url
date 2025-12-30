@@ -11,6 +11,7 @@ import { addTaxonomyStatus } from "./migrations/add-taxonomy-status";
 import { addLocationDistrict } from "./migrations/add-location-district";
 import { addTaxonomyCorrections } from "./migrations/add-taxonomy-corrections";
 import { addPayloadSyncTracking } from "./migrations/add-payload-sync-tracking";
+import { addUploadMetadata } from "./migrations/add-upload-metadata";
 
 let db: Database | null = null;
 
@@ -151,6 +152,9 @@ export function initDb() {
 
   // Run migration to add Payload sync tracking table
   addPayloadSyncTracking(database);
+
+  // Run migration to add imageMetadata column to uploads table
+  addUploadMetadata();
 }
 
 export function getDb(): Database {
