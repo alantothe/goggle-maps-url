@@ -6,6 +6,7 @@ import { Button } from "@client/components/ui/button";
 import { useToast } from "@client/shared/hooks/useToast";
 import { useAddUploadFiles } from "@client/shared/services/api/hooks/useAddUploadFiles";
 import { ImagePreviewGrid } from "../ui/ImagePreviewGrid";
+import { ImageCropperModal } from "../modals/ImageCropperModal";
 import { Upload } from "lucide-react";
 import {
   addUploadFilesSchema,
@@ -19,6 +20,11 @@ interface AddUploadFilesFormProps {
 export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
   const { showToast } = useToast();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [croppedFiles, setCroppedFiles] = useState<(File | null)[]>([]);
+  const [cropModalState, setCropModalState] = useState<{
+    isOpen: boolean;
+    fileIndex: number | null;
+  }>({ isOpen: false, fileIndex: null });
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,15 +50,29 @@ export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
   function handleFileSelect(files: FileList | null) {
     if (!files) return;
     const fileArray = Array.from(files);
+    const startIndex = selectedFiles.length;
+
     setSelectedFiles((prev) => [...prev, ...fileArray]);
+    setCroppedFiles((prev) => [...prev, ...new Array(fileArray.length).fill(null)]);
+
+    // Auto-open first new file for cropping
+    setCropModalState({ isOpen: true, fileIndex: startIndex });
   }
 
   function handleRemoveFile(index: number) {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setCroppedFiles((prev) => prev.filter((_, i) => i !== index));
+
+    // If modal was open for this file, close it
+    if (cropModalState.fileIndex === index) {
+      setCropModalState({ isOpen: false, fileIndex: null });
+    }
   }
 
   function handleReset() {
     setSelectedFiles([]);
+    setCroppedFiles([]);
+    setCropModalState({ isOpen: false, fileIndex: null });
     form.reset();
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -60,11 +80,51 @@ export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
   }
 
   function handleSubmit(data: AddUploadFilesFormData) {
-    if (selectedFiles.length === 0) return;
+    if (!areAllFilesCropped()) return;
+
+    const filesToUpload = croppedFiles.filter((f): f is File => f !== null);
+
     mutate({
-      files: selectedFiles,
+      files: filesToUpload,
       photographerCredit: data.photographerCredit || undefined,
     });
+  }
+
+  // Cropping workflow handlers
+  function handleCropImage(index: number) {
+    setCropModalState({ isOpen: true, fileIndex: index });
+  }
+
+  function handleCropConfirm(croppedFile: File) {
+    if (cropModalState.fileIndex === null) return;
+
+    setCroppedFiles((prev) => {
+      const updated = [...prev];
+      updated[cropModalState.fileIndex!] = croppedFile;
+      return updated;
+    });
+
+    // Auto-open next uncropped file
+    const nextUncropped = findNextUncroppedIndex(cropModalState.fileIndex + 1);
+    if (nextUncropped !== null) {
+      setCropModalState({ isOpen: true, fileIndex: nextUncropped });
+    } else {
+      setCropModalState({ isOpen: false, fileIndex: null });
+    }
+  }
+
+  function findNextUncroppedIndex(startIndex: number): number | null {
+    for (let i = startIndex; i < selectedFiles.length; i++) {
+      if (!croppedFiles[i]) return i;
+    }
+    return null;
+  }
+
+  function areAllFilesCropped(): boolean {
+    return (
+      selectedFiles.length > 0 &&
+      selectedFiles.every((_, i) => croppedFiles[i] !== null)
+    );
   }
 
   // Drag and drop handlers
@@ -127,7 +187,12 @@ export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
 
         {/* Image preview grid */}
         {selectedFiles.length > 0 && (
-          <ImagePreviewGrid files={selectedFiles} onRemove={handleRemoveFile} />
+          <ImagePreviewGrid
+            files={selectedFiles.map((file, i) => croppedFiles[i] || file)}
+            onRemove={handleRemoveFile}
+            onCrop={handleCropImage}
+            croppedIndicators={croppedFiles.map((f) => f !== null)}
+          />
         )}
 
         {/* Photographer credit */}
@@ -158,10 +223,14 @@ export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
         <div className="flex gap-2">
           <Button
             type="submit"
-            disabled={isPending || selectedFiles.length === 0}
+            disabled={isPending || !areAllFilesCropped()}
             size="sm"
           >
-            {isPending ? `Uploading... ${uploadProgress}%` : "Upload Images"}
+            {isPending
+              ? `Uploading... ${uploadProgress}%`
+              : areAllFilesCropped()
+                ? "Upload Images"
+                : `Crop ${selectedFiles.length - croppedFiles.filter(Boolean).length} more image(s)`}
           </Button>
           <Button
             type="button"
@@ -174,6 +243,16 @@ export function AddUploadFilesForm({ locationId }: AddUploadFilesFormProps) {
           </Button>
         </div>
       </form>
+
+      {/* Crop modal */}
+      {cropModalState.isOpen && cropModalState.fileIndex !== null && (
+        <ImageCropperModal
+          file={selectedFiles[cropModalState.fileIndex]}
+          isOpen={cropModalState.isOpen}
+          onClose={() => setCropModalState({ isOpen: false, fileIndex: null })}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }
