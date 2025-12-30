@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormInput } from "@client/shared/components/forms";
+import { FormTextarea } from "@client/shared/components/forms";
 import { Button } from "@client/components/ui/button";
 import { useToast } from "@client/shared/hooks/useToast";
 import { useAddInstagramEmbed } from "@client/shared/services/api/hooks/useAddInstagramEmbed";
@@ -48,16 +48,18 @@ export function AddInstagramEmbedForm({ locationId }: AddInstagramEmbedFormProps
   }
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/50 space-y-3">
+    <div className="border rounded-lg p-4 bg-muted/50 space-y-3" style={{ height: '368px' }}>
       <h4 className="text-sm font-semibold text-foreground">Add Instagram Embed</h4>
 
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-        <FormInput
+        <FormTextarea
           control={form.control}
           name="embedCode"
           label="Instagram Embed Code"
           placeholder='<blockquote class="instagram-media"...'
           description="Paste the full Instagram embed code from instagram.com"
+          rows={9}
+          className="font-mono text-sm"
         />
 
         <div className="flex gap-2">

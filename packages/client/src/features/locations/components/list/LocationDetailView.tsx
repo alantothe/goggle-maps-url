@@ -173,56 +173,57 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
           </div>
         )}
 
-        {/* Instagram Section: Form only */}
-        <div className="space-y-4">
-          {/* Add Instagram Embed Form */}
-          <AddInstagramEmbedForm locationId={locationDetail.id} />
+        {/* Instagram and Upload Forms: Side by side */}
+        <div className="flex gap-4">
+          {/* Instagram Section: Form only */}
+          <div className="flex-1">
+            <AddInstagramEmbedForm locationId={locationDetail.id} />
+          </div>
+
+          {/* Upload Section: Form only */}
+          <div className="flex-1">
+            <AddUploadFilesForm locationId={locationDetail.id} />
+          </div>
         </div>
 
-        {/* Uploads Section: Form + Gallery */}
-        <div className="space-y-4">
-          {/* Add Upload Files Form */}
-          <AddUploadFilesForm locationId={locationDetail.id} />
-
-          {/* Existing Uploads Gallery */}
-          {locationDetail.uploads && locationDetail.uploads.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Uploaded Images ({locationDetail.uploads.reduce((sum, u) => sum + (u.images?.length || 0), 0)}):
-              </span>
-              <ul className="flex gap-2 ml-4 flex-wrap">
-                {locationDetail.uploads.flatMap((upload) =>
-                  (upload.images || []).map((imagePath, idx) => {
-                    const imageUrl = `/api/images/${imagePath.replace(/^data\/images\//, '')}`;
-                    return (
-                      <li key={`${upload.id}-${idx}`} className="relative group">
-                        <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
-                          <img
-                            src={imageUrl}
-                            alt={upload.photographerCredit || "Uploaded image"}
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                            loading="lazy"
-                            onClick={() => handleImageClick(upload, idx)}
-                            title={upload.photographerCredit || "Click to view"}
-                          />
-                        </div>
-                        {/* Delete button */}
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteUpload(upload.id!)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
+        {/* Existing Uploads Gallery */}
+        {locationDetail.uploads && locationDetail.uploads.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Uploaded Images ({locationDetail.uploads.reduce((sum, u) => sum + (u.images?.length || 0), 0)}):
+            </span>
+            <ul className="flex gap-2 ml-4 flex-wrap">
+              {locationDetail.uploads.flatMap((upload) =>
+                (upload.images || []).map((imagePath, idx) => {
+                  const imageUrl = `/api/images/${imagePath.replace(/^data\/images\//, '')}`;
+                  return (
+                    <li key={`${upload.id}-${idx}`} className="relative group">
+                      <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
+                        <img
+                          src={imageUrl}
+                          alt={upload.photographerCredit || "Uploaded image"}
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                          loading="lazy"
+                          onClick={() => handleImageClick(upload, idx)}
+                          title={upload.photographerCredit || "Click to view"}
+                        />
+                      </div>
+                      {/* Delete button */}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteUpload(upload.id!)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
+        )}
 
         {/* Existing Instagram Embeds List */}
         {locationDetail.instagram_embeds && locationDetail.instagram_embeds.length > 0 && (
