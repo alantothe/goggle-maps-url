@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@client/components/ui/dialog";
 import { Button } from "@client/components/ui/button";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ExternalLink, Code } from "lucide-react";
 import type { ImageMetadata } from "@client/shared/services/api/types";
 
 interface ImageLightboxProps {
@@ -12,6 +12,8 @@ interface ImageLightboxProps {
   onPrevious: () => void;
   photographerCredit?: string;
   imageMetadata?: ImageMetadata[];
+  instagramUrl?: string;
+  embedCode?: string;
 }
 
 function formatFileSize(bytes: number): string {
@@ -29,6 +31,8 @@ export function ImageLightbox({
   onPrevious,
   photographerCredit,
   imageMetadata,
+  instagramUrl,
+  embedCode,
 }: ImageLightboxProps) {
   const currentImage = images[currentIndex];
   const imageUrl = `/api/images/${currentImage.replace(/^data\/images\//, '')}`;
@@ -108,6 +112,40 @@ export function ImageLightbox({
                 <p className="text-xs text-gray-300 text-center">
                   Photo by {photographerCredit}
                 </p>
+              )}
+
+              {/* Instagram buttons */}
+              {(instagramUrl || embedCode) && (
+                <div className="flex gap-2 justify-center mt-3">
+                  {instagramUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(instagramUrl);
+                        // Could add a toast notification here
+                      }}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Copy URL
+                    </Button>
+                  )}
+                  {embedCode && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
+                      onClick={() => {
+                        navigator.clipboard.writeText(embedCode);
+                        // Could add a toast notification here
+                      }}
+                    >
+                      <Code className="h-3 w-3 mr-1" />
+                      Copy Embed
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>

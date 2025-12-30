@@ -4,12 +4,13 @@ Database file: `packages/server/data/location.sqlite`
 
 ## Overview
 
-The database uses a normalized schema with 5 tables:
+The database uses a normalized schema with 6 tables:
 - **locations** - Main location data (restaurants, attractions, accommodations, etc.)
 - **instagram_embeds** - Instagram posts linked to locations
 - **uploads** - Directly uploaded images
 - **location_taxonomy** - Hierarchical location data with admin approval workflow
 - **taxonomy_corrections** - Data correction rules for taxonomy values
+- **payload_sync_state** - Sync tracking between url-util and Payload CMS
 
 The schema evolved from a polymorphic design (single `location` table with `type` column) to the current normalized structure through automatic migrations.
 
@@ -114,6 +115,7 @@ packages/server/data/images/{location_name}/instagram/{timestamp}/image_{index}.
 | `location_id` | INTEGER | NOT NULL, FOREIGN KEY REFERENCES locations(id) ON DELETE CASCADE | Parent location |
 | `photographerCredit` | TEXT | NULL | Attribution/credit for the photographer |
 | `images` | TEXT | NULL | JSON array of uploaded image paths |
+| `imageMetadata` | TEXT | NULL | JSON array of image metadata (dimensions, size, format) |
 | `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Record creation timestamp |
 
 ### Constraints
@@ -123,7 +125,9 @@ packages/server/data/images/{location_name}/instagram/{timestamp}/image_{index}.
 ### Data Format
 
 - `images` is stored as JSON string and parsed to array at repository level
-- Example: `["src/data/images/location_name/uploads/1234567890/image_0.jpg"]`
+- `imageMetadata` is stored as JSON string containing `ImageMetadata[]` array
+- Example: `[{"width": 1920, "height": 1080, "size": 2458624, "format": "jpeg"}]`
+- Example images: `["src/data/images/location_name/uploads/1234567890/image_0.jpg"]`
 
 ### File Storage
 
@@ -200,6 +204,40 @@ Applied during location creation/update via `LocationService`:
 
 ---
 
+## Table: `payload_sync_state`
+
+**Purpose:** Tracks synchronization state between url-util locations and Payload CMS documents.
+
+### Columns
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique identifier |
+| `location_id` | INTEGER | NOT NULL, FOREIGN KEY REFERENCES locations(id) ON DELETE CASCADE | Parent location |
+| `payload_collection` | TEXT | NOT NULL, CHECK IN ('dining', 'accommodations', 'attractions', 'nightlife') | Payload CMS collection type |
+| `payload_doc_id` | TEXT | NOT NULL | Payload CMS document ID |
+| `last_synced_at` | TEXT | NOT NULL | ISO timestamp of last sync attempt |
+| `sync_status` | TEXT | NOT NULL DEFAULT 'success', CHECK IN ('success', 'failed', 'pending') | Sync operation status |
+| `error_message` | TEXT | NULL | Error details if sync failed |
+
+### Constraints
+
+- **FOREIGN KEY(location_id)** references `locations(id)` with **ON DELETE CASCADE**
+- **UNIQUE(location_id, payload_collection)** - One sync record per location per collection
+- **Index:** `idx_payload_sync_location` ON (location_id)
+- **Index:** `idx_payload_sync_status` ON (sync_status)
+- **Index:** `idx_payload_sync_collection` ON (payload_collection)
+
+### Usage
+
+Tracks one-way synchronization from url-util to Payload CMS:
+- Supports tracking sync status (success, failed, pending)
+- Stores Payload document IDs for synced locations
+- Enables retry logic for failed syncs
+- Automatically cleans up when locations are deleted
+
+---
+
 ## Relationships
 
 ```
@@ -208,6 +246,10 @@ locations (1) ──────── (many) instagram_embeds
     └─ location_id (FK) ON DELETE CASCADE
 
 locations (1) ──────── (many) uploads
+    ↓
+    └─ location_id (FK) ON DELETE CASCADE
+
+locations (1) ──────── (many) payload_sync_state
     ↓
     └─ location_id (FK) ON DELETE CASCADE
 
@@ -243,12 +285,22 @@ The database auto-migrates on server start through these phases:
 8. **add-taxonomy-status.ts** - Adds status column to location_taxonomy for approval workflow
 9. **add-location-district.ts** - Adds district column for official city districts
 10. **add-taxonomy-corrections.ts** - Creates taxonomy_corrections table and fixes known issues (e.g., "bras-lia" → "brasilia")
+11. **add-upload-metadata.ts** - Adds imageMetadata column to uploads table for storing image dimensions, size, and format
+12. **add-payload-sync-tracking.ts** - Creates payload_sync_state table for tracking sync status with Payload CMS
 
 ### Migration Logic
 
 - Migrations run automatically on `initDb()` in `packages/server/src/shared/db/client.ts`
 - Each migration is idempotent and checks for existing schema before applying changes
 - Migration scripts located in `packages/server/src/shared/db/migrations/`
+
+### Additional Migrations (Data/Utility)
+
+These migrations are not part of the main schema evolution but handle data cleanup and fixes:
+
+- **rename-columns.ts** - Historical migration to rename columns to camelCase (legacy)
+- **fix-google-maps-urls.ts** - Updates Google Maps URLs to use comma separator format
+- **cleanup-maps-parent-id.ts** - Removes invalid parent_id values from map-type locations (legacy)
 
 ---
 
@@ -259,6 +311,7 @@ The database auto-migrates on server start through these phases:
 Deleting a location cascades to delete all related records:
 - All `instagram_embeds` with matching `location_id`
 - All `uploads` with matching `location_id`
+- All `payload_sync_state` records with matching `location_id`
 - Physical image files remain on disk (manual cleanup required)
 
 ### Immutability Rules
@@ -273,6 +326,7 @@ The following fields store JSON arrays as strings:
 - `instagram_embeds.images`
 - `instagram_embeds.original_image_urls`
 - `uploads.images`
+- `uploads.imageMetadata`
 
 Repository `mapRow()` functions deserialize these to arrays using `JSON.parse()`.
 

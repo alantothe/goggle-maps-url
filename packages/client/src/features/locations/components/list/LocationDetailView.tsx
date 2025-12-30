@@ -29,6 +29,8 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
     currentIndex: 0,
     photographerCredit: undefined as string | undefined,
     imageMetadata: undefined as ImageMetadata[] | undefined,
+    instagramUrl: undefined as string | undefined,
+    embedCode: undefined as string | undefined,
   });
 
   const deleteMutation = useDeleteUpload({
@@ -50,6 +52,8 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
       currentIndex: imageIndex,
       photographerCredit: upload.photographerCredit || undefined,
       imageMetadata: upload.imageMetadata,
+      instagramUrl: undefined,
+      embedCode: undefined,
     });
   }
 
@@ -60,6 +64,8 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
       currentIndex: imageIndex,
       photographerCredit: embed.username ? `@${embed.username}` : undefined,
       imageMetadata: undefined, // Instagram embeds don't have metadata
+      instagramUrl: embed.url,
+      embedCode: embed.embed_code,
     });
   }
 
@@ -285,6 +291,8 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
           onPrevious={handleLightboxPrevious}
           photographerCredit={lightboxState.photographerCredit}
           imageMetadata={lightboxState.imageMetadata}
+          instagramUrl={lightboxState.instagramUrl}
+          embedCode={lightboxState.embedCode}
         />
       )}
     </div>
