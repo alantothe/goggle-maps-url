@@ -173,46 +173,10 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
           </div>
         )}
 
-        {/* Instagram Section: Form + Embeds */}
+        {/* Instagram Section: Form only */}
         <div className="space-y-4">
           {/* Add Instagram Embed Form */}
           <AddInstagramEmbedForm locationId={locationDetail.id} />
-
-          {/* Existing Instagram Embeds List */}
-          {locationDetail.instagram_embeds && locationDetail.instagram_embeds.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Instagram Posts:
-              </span>
-              <ul className="flex gap-2 ml-4 flex-wrap">
-                {locationDetail.instagram_embeds.map((embed) => {
-                  // Get first image if available
-                  const firstImage = embed.images?.[0];
-                  const imageUrl = firstImage
-                    ? `/api/images/${firstImage.replace(/^data\/images\//, '')}`
-                    : null;
-
-                  return (
-                    <li key={embed.id}>
-                      {/* Thumbnail icon */}
-                      {imageUrl && (
-                        <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
-                          <img
-                            src={imageUrl}
-                            alt="Instagram"
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                            loading="lazy"
-                            onClick={(e) => onCopyField(embed.embed_code, e)}
-                            title="Click to copy Instagram embed code"
-                          />
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Uploads Section: Form + Gallery */}
@@ -259,6 +223,42 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
             </div>
           )}
         </div>
+
+        {/* Existing Instagram Embeds List */}
+        {locationDetail.instagram_embeds && locationDetail.instagram_embeds.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Instagram Posts:
+            </span>
+            <ul className="flex gap-2 ml-4 flex-wrap">
+              {locationDetail.instagram_embeds.map((embed) => {
+                // Get first image if available
+                const firstImage = embed.images?.[0];
+                const imageUrl = firstImage
+                  ? `/api/images/${firstImage.replace(/^data\/images\//, '')}`
+                  : null;
+
+                return (
+                  <li key={embed.id}>
+                    {/* Thumbnail icon */}
+                    {imageUrl && (
+                      <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
+                        <img
+                          src={imageUrl}
+                          alt="Instagram"
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                          loading="lazy"
+                          onClick={(e) => onCopyField(embed.embed_code, e)}
+                          title="Click to copy Instagram embed code"
+                        />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Image Lightbox */}
