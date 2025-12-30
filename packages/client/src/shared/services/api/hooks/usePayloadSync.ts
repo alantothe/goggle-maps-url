@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { payloadApi } from "../payload.api";
-import { LOCATIONS_QUERY_KEY } from "./useLocations";
 import type { Category } from "../types";
 
 export const PAYLOAD_SYNC_STATUS_QUERY_KEY = ["payload-sync-status"] as const;

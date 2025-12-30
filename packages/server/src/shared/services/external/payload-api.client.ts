@@ -58,11 +58,40 @@ export interface PayloadGalleryItem {
   caption?: string;
 }
 
+export interface PayloadInstagramPostData {
+  title: string;
+  embedCode: string;
+  previewImage: string; // MediaAsset ID
+  status: "draft" | "published";
+}
+
+export interface PayloadInstagramPostResponse {
+  message: string;
+  doc: {
+    id: string;
+    title: string;
+    embedCode: string;
+    previewImage: {
+      id: string;
+      filename: string;
+      url: string;
+    };
+    status: "draft" | "published";
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface PayloadInstagramGalleryItem {
+  post: string; // Instagram post ID
+}
+
 export interface PayloadEntryData {
   title: string;
   type?: string;
   location: string;
   gallery: PayloadGalleryItem[];
+  instagramGallery?: PayloadInstagramGalleryItem[];
   address?: string;
   countryCode?: string;
   phoneNumber?: string;
@@ -220,6 +249,40 @@ export class PayloadApiClient {
     console.log(`✓ Created ${collection} entry in Payload: ${result.doc.title} → ID: ${result.doc.id}`);
 
     return result;
+  }
+
+  /**
+   * Create an Instagram post in Payload
+   * Returns the Instagram post ID to be used in instagramGallery references
+   */
+  async createInstagramPost(data: PayloadInstagramPostData): Promise<string> {
+    if (!this.isConfigured()) {
+      throw new ServiceUnavailableError("Payload CMS");
+    }
+
+    const token = await this.ensureAuthenticated();
+
+    const response = await fetch(`${this.apiUrl}/api/instagram-posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `JWT ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Payload Instagram post creation failed: ${response.status} - ${errorText}`
+      );
+    }
+
+    const result = await response.json() as PayloadInstagramPostResponse;
+
+    console.log(`✓ Created Instagram post in Payload: ${result.doc.title} → ID: ${result.doc.id}`);
+
+    return result.doc.id;
   }
 
   /**

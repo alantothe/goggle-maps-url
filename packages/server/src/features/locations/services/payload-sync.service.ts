@@ -46,6 +46,11 @@ export interface SyncStatusResponse {
   syncState?: PayloadSyncState;
 }
 
+interface UploadedImagesResult {
+  galleryImageIds: string[];      // MediaAsset IDs for regular uploads
+  instagramPostIds: string[];     // Instagram post IDs for embeds
+}
+
 export class PayloadSyncService {
   constructor(
     private readonly payloadClient: PayloadApiClient,
@@ -75,15 +80,23 @@ export class PayloadSyncService {
 
       console.log(`🔄 Syncing location ${locationId} (${location.title}) to Payload...`);
 
-      // Upload images to Payload
-      const uploadedImageIds = await this.uploadLocationImages(location);
+      // Upload images and create Instagram posts
+      const uploadedImages = await this.uploadLocationImages(location);
 
-      if (uploadedImageIds.length === 0) {
-        console.warn(`⚠️  No images found for location ${locationId}, syncing without images`);
+      if (uploadedImages.galleryImageIds.length === 0 &&
+          uploadedImages.instagramPostIds.length === 0) {
+        console.warn(
+          `⚠️  No images or Instagram posts found for location ${locationId}, syncing without media`
+        );
+      } else {
+        console.log(
+          `✓ Uploaded ${uploadedImages.galleryImageIds.length} gallery images, ` +
+          `created ${uploadedImages.instagramPostIds.length} Instagram posts`
+        );
       }
 
       // Map location data to Payload format
-      const payloadData = this.mapLocationToPayloadFormat(location, uploadedImageIds);
+      const payloadData = this.mapLocationToPayloadFormat(location, uploadedImages);
 
       // Create entry in Payload
       const response = await this.payloadClient.createEntry(collection, payloadData);
@@ -198,39 +211,15 @@ export class PayloadSyncService {
   }
 
   /**
-   * Upload all images for a location to Payload
-   * Returns array of MediaAsset IDs
+   * Upload images and create Instagram posts for a location
+   * Returns separate arrays for gallery images and Instagram post IDs
    */
-  private async uploadLocationImages(location: LocationResponse): Promise<string[]> {
-    const uploadedIds: string[] = [];
+  private async uploadLocationImages(location: LocationResponse): Promise<UploadedImagesResult> {
+    const galleryImageIds: string[] = [];
+    const instagramPostIds: string[] = [];
 
     try {
-      // Upload Instagram embed images
-      for (const embed of location.instagram_embeds) {
-        if (embed.images && embed.images.length > 0) {
-          for (const imagePath of embed.images) {
-            try {
-              const imageBuffer = await this.imageStorage.readImage(imagePath);
-              const filename = imagePath.split("/").pop() || "image.jpg";
-              const altText = `Instagram post by ${embed.username}`;
-
-              const mediaAssetId = await this.payloadClient.uploadImage(
-                imageBuffer,
-                filename,
-                altText,
-                this.mapLocationKeyToPayloadLocation(location.locationKey || undefined)
-              );
-
-              uploadedIds.push(mediaAssetId);
-            } catch (error) {
-              console.warn(`⚠️  Failed to upload image ${imagePath}:`, error);
-              // Continue with other images
-            }
-          }
-        }
-      }
-
-      // Upload direct upload images
+      // Upload direct upload images (ALL images go to gallery)
       for (const upload of location.uploads) {
         if (upload.images && upload.images.length > 0) {
           for (const imagePath of upload.images) {
@@ -248,7 +237,7 @@ export class PayloadSyncService {
                 this.mapLocationKeyToPayloadLocation(location.locationKey || undefined)
               );
 
-              uploadedIds.push(mediaAssetId);
+              galleryImageIds.push(mediaAssetId);
             } catch (error) {
               console.warn(`⚠️  Failed to upload image ${imagePath}:`, error);
               // Continue with other images
@@ -256,12 +245,70 @@ export class PayloadSyncService {
           }
         }
       }
+
+      // Process Instagram embeds (FIRST image only + create post)
+      for (const embed of location.instagram_embeds) {
+        if (embed.images && embed.images.length > 0) {
+          const previewImagePath = embed.images[0];
+          if (!previewImagePath) continue; // Skip if no preview image
+
+          let previewMediaAssetId: string | null = null;
+
+          try {
+            // Step 1: Upload ONLY first image as preview
+            const imageBuffer = await this.imageStorage.readImage(previewImagePath);
+            const filename = previewImagePath.split("/").pop() || "instagram.jpg";
+            const altText = `Instagram post by ${embed.username}`;
+
+            previewMediaAssetId = await this.payloadClient.uploadImage(
+              imageBuffer,
+              filename,
+              altText,
+              this.mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+            );
+
+            console.log(`✓ Uploaded Instagram preview image: ${previewMediaAssetId}`);
+
+            // Step 2: Create Instagram post with preview image
+            const postTitle = this.createInstagramPostTitle(embed.username, location);
+            const instagramPostId = await this.payloadClient.createInstagramPost({
+              title: postTitle,
+              embedCode: embed.embed_code,
+              previewImage: previewMediaAssetId,
+              status: "published",
+            });
+
+            instagramPostIds.push(instagramPostId);
+            console.log(`✓ Created Instagram post: ${instagramPostId}`);
+
+          } catch (error) {
+            if (previewMediaAssetId) {
+              console.warn(
+                `⚠️  Instagram post creation failed for ${embed.username}, ` +
+                `but preview image was uploaded (MediaAsset: ${previewMediaAssetId})`
+              );
+            } else {
+              console.warn(`⚠️  Failed to process Instagram embed for ${embed.username}:`, error);
+            }
+            // Continue with other embeds
+          }
+        }
+      }
     } catch (error) {
       console.error("Error uploading images:", error);
-      // Return whatever images we successfully uploaded
+      // Return whatever we successfully processed
     }
 
-    return uploadedIds;
+    return { galleryImageIds, instagramPostIds };
+  }
+
+  /**
+   * Create Instagram post title from username and location
+   */
+  private createInstagramPostTitle(username: string, location: LocationResponse): string {
+    const locationName = location.title || location.source.name;
+    const cleanUsername = username.replace(/^@/, "");
+    return `@${cleanUsername} at ${locationName}`;
   }
 
   /**
@@ -269,16 +316,19 @@ export class PayloadSyncService {
    */
   private mapLocationToPayloadFormat(
     location: LocationResponse,
-    imageIds: string[]
+    uploadedImages: UploadedImagesResult
   ) {
     return {
       title: location.title || location.source.name,
       type: this.mapCategoryToType(location.category),
       location: this.mapLocationKeyToPayloadLocation(location.locationKey || undefined) || "unknown",
-      gallery: imageIds.map(id => ({
+      gallery: uploadedImages.galleryImageIds.map(id => ({
         image: id,
         altText: "",
         caption: "",
+      })),
+      instagramGallery: uploadedImages.instagramPostIds.map(id => ({
+        post: id,
       })),
       address: location.contact.url || "",
       countryCode: this.convertIsoToPhoneCountryCode(location.contact.countryCode || undefined) || "",
