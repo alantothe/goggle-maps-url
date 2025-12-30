@@ -293,6 +293,9 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
           imageMetadata={lightboxState.imageMetadata}
           instagramUrl={lightboxState.instagramUrl}
           embedCode={lightboxState.embedCode}
+          onCopySuccess={(message, position) => {
+            showToast(message, position || { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+          }}
         />
       )}
     </div>

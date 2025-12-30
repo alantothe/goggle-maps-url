@@ -14,6 +14,7 @@ interface ImageLightboxProps {
   imageMetadata?: ImageMetadata[];
   instagramUrl?: string;
   embedCode?: string;
+  onCopySuccess?: (message: string, position?: { x: number; y: number }) => void;
 }
 
 function formatFileSize(bytes: number): string {
@@ -33,6 +34,7 @@ export function ImageLightbox({
   imageMetadata,
   instagramUrl,
   embedCode,
+  onCopySuccess,
 }: ImageLightboxProps) {
   const currentImage = images[currentIndex];
   const imageUrl = `/api/images/${currentImage.replace(/^data\/images\//, '')}`;
@@ -122,9 +124,23 @@ export function ImageLightbox({
                       variant="outline"
                       size="sm"
                       className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
-                      onClick={() => {
-                        navigator.clipboard.writeText(instagramUrl);
-                        // Could add a toast notification here
+                      onClick={async (e) => {
+                        try {
+                          await navigator.clipboard.writeText(instagramUrl);
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const position = {
+                            x: rect.left + rect.width / 2,
+                            y: rect.bottom + 8
+                          };
+                          onCopySuccess?.("Instagram URL copied to clipboard", position);
+                        } catch (error) {
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const position = {
+                            x: rect.left + rect.width / 2,
+                            y: rect.bottom + 8
+                          };
+                          onCopySuccess?.("Failed to copy URL", position);
+                        }
                       }}
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
@@ -136,9 +152,23 @@ export function ImageLightbox({
                       variant="outline"
                       size="sm"
                       className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
-                      onClick={() => {
-                        navigator.clipboard.writeText(embedCode);
-                        // Could add a toast notification here
+                      onClick={async (e) => {
+                        try {
+                          await navigator.clipboard.writeText(embedCode);
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const position = {
+                            x: rect.left + rect.width / 2,
+                            y: rect.bottom + 8
+                          };
+                          onCopySuccess?.("Embed code copied to clipboard", position);
+                        } catch (error) {
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const position = {
+                            x: rect.left + rect.width / 2,
+                            y: rect.bottom + 8
+                          };
+                          onCopySuccess?.("Failed to copy embed code", position);
+                        }
                       }}
                     >
                       <Code className="h-3 w-3 mr-1" />
