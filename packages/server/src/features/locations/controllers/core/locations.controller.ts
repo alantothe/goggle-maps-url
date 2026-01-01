@@ -11,8 +11,7 @@ export function getLocations(c: Context) {
     query?.category,
     query?.locationKey
   );
-  const cwd = process.cwd();
-  return c.json({ locations, cwd });
+  return c.json(successResponse({ locations }));
 }
 
 export function getLocationsBasic(c: Context) {

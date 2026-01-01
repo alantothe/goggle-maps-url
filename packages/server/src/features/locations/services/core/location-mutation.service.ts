@@ -4,10 +4,10 @@ import {
   getLocationById,
   getLocationBySlug
 } from "../../repositories/core";
-import type { ImageStorageService } from "../../../shared/services/storage/image-storage.service";
+import type { ImageStorageService } from "@server/shared/services/storage/image-storage.service";
 
 export class LocationMutationService {
-  constructor(private readonly imageStorageService: ImageStorageService) {}
+  constructor(private readonly imageStorage: ImageStorageService) {}
 
   async deleteLocationBySlug(slug: string): Promise<boolean> {
     // 1. Fetch location to get sanitized name for file cleanup
@@ -16,7 +16,7 @@ export class LocationMutationService {
       return false;
     }
 
-    const sanitizedName = this.imageStorageService.sanitizeLocationName(location.name);
+    const sanitizedName = this.imageStorage.sanitizeLocationName(location.name);
 
     // 2. Delete from database (repository handles cascade to embeds and uploads)
     const deleted = deleteLocationBySlugRepo(slug);
@@ -26,7 +26,7 @@ export class LocationMutationService {
 
     // 3. Delete entire location folder from filesystem
     try {
-      await this.imageStorageService.deleteLocationFolder(sanitizedName);
+      await this.imageStorage.deleteLocationFolder(sanitizedName);
     } catch (error) {
       // Log but don't throw - files may be orphaned, recoverable via admin cleanup
       console.error("File deletion failed for location", { slug, error });
@@ -42,7 +42,7 @@ export class LocationMutationService {
       return false;
     }
 
-    const sanitizedName = this.imageStorageService.sanitizeLocationName(location.name);
+    const sanitizedName = this.imageStorage.sanitizeLocationName(location.name);
 
     // 2. Delete from database (repository handles cascade to embeds and uploads)
     const deleted = deleteLocationByIdRepo(id);
@@ -52,7 +52,7 @@ export class LocationMutationService {
 
     // 3. Delete entire location folder from filesystem
     try {
-      await this.imageStorageService.deleteLocationFolder(sanitizedName);
+      await this.imageStorage.deleteLocationFolder(sanitizedName);
     } catch (error) {
       // Log but don't throw - files may be orphaned, recoverable via admin cleanup
       console.error("File deletion failed for location", { id, error });

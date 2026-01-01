@@ -1,7 +1,7 @@
 import type { LocationWithNested, LocationResponse, LocationBasic } from "../../models/location";
 import { getAllLocations, getLocationsByCategory, getLocationById } from "../../repositories/core";
-import { getAllInstagramEmbeds } from "../../repositories/content";
-import { getAllUploads } from "../../repositories/content";
+import { getInstagramEmbedsByLocationIds, getInstagramEmbedsByLocationId } from "../../repositories/content";
+import { getUploadsByLocationIds, getUploadsByLocationId } from "../../repositories/content";
 import { transformLocationToResponse, transformLocationToBasicResponse, isLocationInScope } from "../../utils/location-utils";
 
 export class LocationQueryService {
@@ -18,15 +18,17 @@ export class LocationQueryService {
       );
     }
 
-    // Step 3: Fetch related data (existing pattern)
-    const allEmbeds = getAllInstagramEmbeds();
-    const allUploads = getAllUploads();
+    // Step 3: Fetch related data efficiently (prevents N+1 query problem)
+    // Only fetch embeds/uploads for the specific location IDs we need
+    const locationIds = locations.map((loc) => loc.id!);
+    const embedsByLocationId = getInstagramEmbedsByLocationIds(locationIds);
+    const uploadsByLocationId = getUploadsByLocationIds(locationIds);
 
-    // Step 4: Create LocationWithNested (existing pattern)
+    // Step 4: Create LocationWithNested using O(1) Map lookups
     const locationsWithNested: LocationWithNested[] = locations.map((loc) => ({
       ...loc,
-      instagram_embeds: allEmbeds.filter((e) => e.location_id === loc.id),
-      uploads: allUploads.filter((u) => u.location_id === loc.id),
+      instagram_embeds: embedsByLocationId.get(loc.id!) || [],
+      uploads: uploadsByLocationId.get(loc.id!) || [],
     }));
 
     // Step 5: Transform to LocationResponse format
@@ -57,15 +59,15 @@ export class LocationQueryService {
       return null;
     }
 
-    // Step 2: Fetch related data
-    const allEmbeds = getAllInstagramEmbeds();
-    const allUploads = getAllUploads();
+    // Step 2: Fetch related data efficiently (only for this specific location)
+    const instagram_embeds = getInstagramEmbedsByLocationId(id);
+    const uploads = getUploadsByLocationId(id);
 
     // Step 3: Create LocationWithNested
     const locationWithNested: LocationWithNested = {
       ...location,
-      instagram_embeds: allEmbeds.filter((e) => e.location_id === location.id),
-      uploads: allUploads.filter((u) => u.location_id === location.id),
+      instagram_embeds,
+      uploads,
     };
 
     // Step 4: Transform to LocationResponse format

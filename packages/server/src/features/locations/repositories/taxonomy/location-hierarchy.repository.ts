@@ -5,11 +5,24 @@ import {
   filterNeighborhoodsByCity,
   getCountries as extractCountries,
   isLocationInScope,
-  buildNestedHierarchy,
-  formatLocationName
+  buildNestedHierarchy
 } from "../../utils/location-utils";
+import { formatLocationName } from "@url-util/shared";
 
-function mapHierarchyRow(row: any): LocationHierarchy {
+/**
+ * Database row interface for location_taxonomy table
+ */
+interface LocationHierarchyDbRow {
+  id: number;
+  country: string;
+  city: string | null;
+  neighborhood: string | null;
+  locationKey: string;
+  status?: string;
+  created_at?: string;
+}
+
+function mapHierarchyRow(row: LocationHierarchyDbRow): LocationHierarchy {
   return {
     id: row.id,
     country: row.country,
@@ -30,7 +43,7 @@ export function getAllLocationHierarchy(): LocationHierarchy[] {
     WHERE status = 'approved'
     ORDER BY locationKey
   `);
-  const rows = query.all() as any[];
+  const rows = query.all() as LocationHierarchyDbRow[];
   return rows.map(mapHierarchyRow);
 }
 
@@ -56,15 +69,6 @@ export function getCitiesByCountry(country: string): LocationHierarchy[] {
 export function getNeighborhoodsByCity(country: string, city: string): LocationHierarchy[] {
   const allLocations = getAllLocationHierarchy();
   return filterNeighborhoodsByCity(allLocations, country, city);
-}
-
-/**
- * Get locations that match or are children of a parent location key
- * Useful for filtering related content (e.g., attractions in a city)
- */
-export function getLocationsInScope(parentLocationKey: string): LocationHierarchy[] {
-  const allLocations = getAllLocationHierarchy();
-  return allLocations.filter(loc => isLocationInScope(loc.locationKey, parentLocationKey));
 }
 
 /**
@@ -118,11 +122,11 @@ export function getTaxonomyEntry(locationKey: string): LocationHierarchy | null 
     FROM location_taxonomy
     WHERE locationKey = $locationKey
   `);
-  const row = query.get({ $locationKey: locationKey }) as any;
+  const row = query.get({ $locationKey: locationKey }) as LocationHierarchyDbRow | undefined;
   if (!row) return null;
   return {
     ...mapHierarchyRow(row),
-    status: row.status,
+    status: row.status as 'approved' | 'pending' | undefined,
     created_at: row.created_at
   };
 }
@@ -208,7 +212,7 @@ export function getPendingTaxonomyEntries(): LocationHierarchy[] {
     WHERE status = 'pending'
     ORDER BY created_at DESC
   `);
-  const rows = query.all() as any[];
+  const rows = query.all() as LocationHierarchyDbRow[];
   return rows.map(row => ({
     ...mapHierarchyRow(row),
     status: 'pending' as const,

@@ -2,10 +2,24 @@ import { getDb } from "@server/shared/db/client";
 import type { Upload, LegacyUpload, ImageSetUpload } from "../../models/location";
 
 /**
+ * Database row interface for uploads table
+ */
+interface UploadDbRow {
+  id: number;
+  location_id: number;
+  photographerCredit: string | null;
+  images: string | null;
+  imageMetadata: string | null;
+  imageSets: string | null;
+  uploadFormat: string;
+  created_at: string;
+}
+
+/**
  * Maps a database row to the appropriate Upload type (legacy or imageset)
  * Uses uploadFormat column as discriminator
  */
-function mapRow(row: any): Upload {
+function mapRow(row: UploadDbRow): Upload {
   const format = row.uploadFormat || 'legacy';
 
   if (format === 'imageset') {
@@ -127,7 +141,7 @@ export function getUploadById(id: number): Upload | null {
     FROM uploads
     WHERE id = $id
   `);
-  const row = query.get({ $id: id }) as any;
+  const row = query.get({ $id: id }) as UploadDbRow | undefined;
   if (!row) return null;
   return mapRow(row);
 }
@@ -140,7 +154,7 @@ export function getUploadsByLocationId(locationId: number): Upload[] {
     WHERE location_id = $locationId
     ORDER BY created_at DESC
   `);
-  const rows = query.all({ $locationId: locationId }) as any[];
+  const rows = query.all({ $locationId: locationId }) as UploadDbRow[];
   return rows.map(mapRow);
 }
 
@@ -151,8 +165,43 @@ export function getAllUploads(): Upload[] {
     FROM uploads
     ORDER BY created_at DESC
   `);
-  const rows = query.all() as any[];
+  const rows = query.all() as UploadDbRow[];
   return rows.map(mapRow);
+}
+
+/**
+ * Efficiently fetch uploads for multiple location IDs
+ * Returns a Map of location_id -> Upload[] for O(1) lookup
+ * This prevents N+1 query problems when fetching multiple locations
+ */
+export function getUploadsByLocationIds(locationIds: number[]): Map<number, Upload[]> {
+  if (locationIds.length === 0) {
+    return new Map();
+  }
+
+  const db = getDb();
+  const placeholders = locationIds.map(() => '?').join(',');
+  const query = db.query(`
+    SELECT id, location_id, photographerCredit, images, imageMetadata, imageSets, uploadFormat, created_at
+    FROM uploads
+    WHERE location_id IN (${placeholders})
+    ORDER BY created_at DESC
+  `);
+
+  const rows = query.all(...locationIds) as UploadDbRow[];
+  const uploadsByLocation = new Map<number, Upload[]>();
+
+  // Group uploads by location_id
+  rows.forEach((row) => {
+    const upload = mapRow(row);
+    const locationId = upload.location_id!;
+    if (!uploadsByLocation.has(locationId)) {
+      uploadsByLocation.set(locationId, []);
+    }
+    uploadsByLocation.get(locationId)!.push(upload);
+  });
+
+  return uploadsByLocation;
 }
 
 export function deleteUploadById(id: number): boolean {

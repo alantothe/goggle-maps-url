@@ -62,7 +62,7 @@ export async function clearDatabase(c: Context) {
 }
 
 export async function scanOrphanedFiles(c: Context) {
-  const result = await container.imageStorageService.scanOrphanedFiles();
+  const result = await container.imageStorage.scanOrphanedFiles();
 
   return c.json(successResponse({
     totalOrphanedFiles: result.totalOrphanedFiles,
@@ -78,11 +78,11 @@ export async function cleanupOrphanedFiles(c: Context) {
     throw new BadRequestError("Must set confirm=true to proceed with cleanup");
   }
 
-  const scanResult = await container.imageStorageService.scanOrphanedFiles();
+  const scanResult = await container.imageStorage.scanOrphanedFiles();
   const allOrphanedPaths = Array.from(scanResult.orphanedByLocation.values())
     .flatMap(loc => loc.paths);
 
-  const deletionResult = await container.imageStorageService.deleteOrphanedFiles(allOrphanedPaths);
+  const deletionResult = await container.imageStorage.deleteOrphanedFiles(allOrphanedPaths);
 
   return c.json(successResponse({
     deletedCount: deletionResult.deletedCount,

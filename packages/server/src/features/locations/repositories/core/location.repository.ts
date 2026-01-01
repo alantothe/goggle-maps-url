@@ -3,11 +3,6 @@ import type { Location } from "../../models/location";
 import { isLocationInScope } from "../../utils/location-utils";
 import { slugifyLocationPart } from "../../services/geocoding/location-geocoding.helper";
 
-function mapRow(row: any): Location {
-  return {
-    ...row,
-  };
-}
 
 export function saveLocation(location: Location): number | boolean {
   // Generate slug if not provided
@@ -130,7 +125,8 @@ export function updateLocationById(id: number, updates: Partial<Location>): bool
       WHERE id = $id
     `);
 
-    (query as any).run(params);
+    // Type cast necessary due to dynamic parameter building
+    query.run(params as Record<string, string | number | null>);
     return true;
   } catch (error) {
     console.error("Error updating location:", error);
@@ -149,8 +145,7 @@ export function getAllLocations(): Location[] {
     WHERE l.locationKey IS NULL OR t.status = 'approved'
     ORDER BY l.created_at DESC
   `);
-  const rows = query.all() as any[];
-  return rows.map(mapRow);
+  return query.all() as Location[];
 }
 
 export function getLocationsByCategory(category: string): Location[] {
@@ -165,8 +160,7 @@ export function getLocationsByCategory(category: string): Location[] {
       AND (l.locationKey IS NULL OR t.status = 'approved')
     ORDER BY l.created_at DESC
   `);
-  const rows = query.all({ $category: category }) as any[];
-  return rows.map(mapRow);
+  return query.all({ $category: category }) as Location[];
 }
 
 export function getLocationById(id: number): Location | null {
@@ -180,17 +174,15 @@ export function getLocationById(id: number): Location | null {
     WHERE l.id = $id
       AND (l.locationKey IS NULL OR t.status = 'approved')
   `);
-  const row = query.get({ $id: id }) as any;
-  if (!row) return null;
-  return mapRow(row);
+  const row = query.get({ $id: id }) as Location | undefined;
+  return row || null;
 }
 
 export function getLocationBySlug(slug: string): Location | null {
   const db = getDb();
   const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE slug = $slug");
-  const row = query.get({ $slug: slug }) as any;
-  if (!row) return null;
-  return mapRow(row);
+  const row = query.get({ $slug: slug }) as Location | undefined;
+  return row || null;
 }
 
 export function clearDatabase() {
@@ -261,19 +253,6 @@ export function deleteLocationBySlug(slug: string): boolean {
   }
 }
 
-/**
- * Get locations by location scope (useful for cascading filters)
- */
-export function getLocationsInScope(locationKey: string): Location[] {
-  if (!locationKey) {
-    return [];
-  }
-
-  const allLocations = getAllLocations();
-  return allLocations.filter(
-    (loc) => loc.locationKey && isLocationInScope(loc.locationKey, locationKey)
-  );
-}
 
 /**
  * Update all locations by replacing a value in locationKey

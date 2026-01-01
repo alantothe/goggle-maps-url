@@ -1,7 +1,22 @@
 import { getDb } from "@server/shared/db/client";
 import type { InstagramEmbed } from "../../models/location";
 
-function mapRow(row: any): InstagramEmbed {
+/**
+ * Database row interface for instagram_embeds table
+ */
+interface InstagramEmbedDbRow {
+  id: number;
+  location_id: number;
+  username: string;
+  url: string;
+  embed_code: string;
+  instagram: string | null;
+  images: string | null;
+  original_image_urls: string | null;
+  created_at: string;
+}
+
+function mapRow(row: InstagramEmbedDbRow): InstagramEmbed {
   const { instagram: _ignored, images, original_image_urls, ...rest } = row;
   return {
     ...rest,
@@ -71,7 +86,7 @@ export function getInstagramEmbedById(id: number): InstagramEmbed | null {
     FROM instagram_embeds
     WHERE id = $id
   `);
-  const row = query.get({ $id: id }) as any;
+  const row = query.get({ $id: id }) as InstagramEmbedDbRow | undefined;
   if (!row) return null;
   return mapRow(row);
 }
@@ -84,7 +99,7 @@ export function getInstagramEmbedsByLocationId(locationId: number): InstagramEmb
     WHERE location_id = $locationId
     ORDER BY created_at DESC
   `);
-  const rows = query.all({ $locationId: locationId }) as any[];
+  const rows = query.all({ $locationId: locationId }) as InstagramEmbedDbRow[];
   return rows.map(mapRow);
 }
 
@@ -95,8 +110,43 @@ export function getAllInstagramEmbeds(): InstagramEmbed[] {
     FROM instagram_embeds
     ORDER BY created_at DESC
   `);
-  const rows = query.all() as any[];
+  const rows = query.all() as InstagramEmbedDbRow[];
   return rows.map(mapRow);
+}
+
+/**
+ * Efficiently fetch instagram embeds for multiple location IDs
+ * Returns a Map of location_id -> InstagramEmbed[] for O(1) lookup
+ * This prevents N+1 query problems when fetching multiple locations
+ */
+export function getInstagramEmbedsByLocationIds(locationIds: number[]): Map<number, InstagramEmbed[]> {
+  if (locationIds.length === 0) {
+    return new Map();
+  }
+
+  const db = getDb();
+  const placeholders = locationIds.map(() => '?').join(',');
+  const query = db.query(`
+    SELECT id, location_id, username, url, embed_code, instagram, images, original_image_urls, created_at
+    FROM instagram_embeds
+    WHERE location_id IN (${placeholders})
+    ORDER BY created_at DESC
+  `);
+
+  const rows = query.all(...locationIds) as InstagramEmbedDbRow[];
+  const embedsByLocation = new Map<number, InstagramEmbed[]>();
+
+  // Group embeds by location_id
+  rows.forEach((row) => {
+    const embed = mapRow(row);
+    const locationId = embed.location_id!;
+    if (!embedsByLocation.has(locationId)) {
+      embedsByLocation.set(locationId, []);
+    }
+    embedsByLocation.get(locationId)!.push(embed);
+  });
+
+  return embedsByLocation;
 }
 
 export function deleteInstagramEmbedById(id: number): boolean {

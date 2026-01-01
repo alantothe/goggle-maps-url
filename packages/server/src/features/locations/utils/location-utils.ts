@@ -4,10 +4,9 @@ import type {
   CityData,
   NeighborhoodData,
   LocationWithNested,
-  LocationResponse,
-  Location,
-  LocationBasic
+  LocationResponse
 } from '../models/location';
+import { formatLocationName } from '@url-util/shared';
 
 /**
  * Parse a pipe-delimited location key into its components
@@ -57,18 +56,6 @@ export function formatLocationForDisplay(locationKey: string): string {
   }
 
   return parts.join(' > ');
-}
-
-/**
- * Format a location slug/name for display (convert kebab-case to Title Case)
- * @param slug - Slug like "santa-teresita"
- * @returns Display name like "Santa Teresita"
- */
-export function formatLocationName(slug: string): string {
-  return slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }
 
 /**
@@ -134,6 +121,47 @@ export function isLocationInScope(locationKey: string, parentLocationKey: string
 }
 
 /**
+ * Generate all possible location combinations from hierarchical data
+ * @param countries - Array of country data with cities and neighborhoods
+ * @returns Array of all possible location hierarchy entries
+ */
+export function generateLocationCombinations(countries: CountryData[]): LocationHierarchy[] {
+  const locations: LocationHierarchy[] = [];
+
+  countries.forEach(country => {
+    // Add country-only entry
+    locations.push({
+      country: country.code,
+      city: null,
+      neighborhood: null,
+      locationKey: country.code,
+    });
+
+    country.cities.forEach(city => {
+      // Add country|city entry
+      locations.push({
+        country: country.code,
+        city: city.value,
+        neighborhood: null,
+        locationKey: `${country.code}|${city.value}`,
+      });
+
+      // Add country|city|neighborhood entries
+      city.neighborhoods.forEach(neighborhood => {
+        locations.push({
+          country: country.code,
+          city: city.value,
+          neighborhood: neighborhood.value,
+          locationKey: `${country.code}|${city.value}|${neighborhood.value}`,
+        });
+      });
+    });
+  });
+
+  return locations;
+}
+
+/**
  * Transform a flat location with nested arrays to the API response format
  * with contact, coordinates, and source objects
  * @param location - Location with nested instagram_embeds and uploads
@@ -169,72 +197,74 @@ export function transformLocationToResponse(location: LocationWithNested): Locat
 }
 
 /**
- * Transform a location to basic response format with only essential info
- * @param location - Location object
- * @returns Basic location info with name and location
+ * Transform a location to basic response format (lightweight)
+ * Used for list views that don't need full location details
+ * @param location - Location object from database
+ * @returns Basic location info with id, name, location, and category
  */
-export function transformLocationToBasicResponse(location: Location): LocationBasic {
+export function transformLocationToBasicResponse(location: import('../models/location').Location): import('../models/location').LocationBasic {
   return {
     id: location.id!,
     name: location.name,
-    location: location.locationKey || null,
+    location: location.locationKey ? formatLocationForDisplay(location.locationKey) : null,
     category: location.category || 'attractions',
   };
 }
 
 /**
- * Transform flat location hierarchy rows into nested country data structure
- * @param locations - Flat array of location hierarchy entries
+ * Build nested hierarchy structure from flat location taxonomy data
+ * Converts flat LocationHierarchy entries to nested CountryData structure
+ * @param locations - Array of flat location hierarchy entries
  * @returns Array of countries with nested cities and neighborhoods
  */
 export function buildNestedHierarchy(locations: LocationHierarchy[]): CountryData[] {
   const countryMap = new Map<string, CountryData>();
 
   locations.forEach(loc => {
-    // Get or create country
+    // Get or create country entry
     if (!countryMap.has(loc.country)) {
       countryMap.set(loc.country, {
-        code: loc.country.toUpperCase().slice(0, 2), // CO, PE, etc.
-        label: formatLocationName(loc.country), // Colombia, Peru
-        cities: []
+        code: loc.country,
+        label: formatLocationName(loc.country),
+        cities: [],
       });
     }
-
     const country = countryMap.get(loc.country)!;
 
-    // If this is a city entry (has city but no neighborhood)
+    // Add city if present
     if (loc.city && !loc.neighborhood) {
-      // Check if city already exists
-      let city = country.cities.find(c => c.value === loc.city);
-      if (!city) {
-        city = {
+      const existingCity = country.cities.find(c => c.value === loc.city);
+      if (!existingCity) {
+        country.cities.push({
           label: formatLocationName(loc.city),
           value: loc.city,
-          neighborhoods: []
-        };
-        country.cities.push(city);
+          neighborhoods: [],
+        });
       }
     }
 
-    // If this is a neighborhood entry (has both city and neighborhood)
+    // Add neighborhood if present
     if (loc.city && loc.neighborhood) {
-      // Get or create city
-      let city = country.cities.find(c => c.value === loc.city);
-      if (!city) {
-        city = {
+      const city = country.cities.find(c => c.value === loc.city);
+      if (city) {
+        const existingNeighborhood = city.neighborhoods.find(n => n.value === loc.neighborhood);
+        if (!existingNeighborhood) {
+          city.neighborhoods.push({
+            label: formatLocationName(loc.neighborhood),
+            value: loc.neighborhood,
+          });
+        }
+      } else {
+        // City doesn't exist yet, create it with the neighborhood
+        country.cities.push({
           label: formatLocationName(loc.city),
           value: loc.city,
-          neighborhoods: []
-        };
-        country.cities.push(city);
-      }
-
-      // Add neighborhood if not already present
-      const neighborhoodExists = city.neighborhoods.some(n => n.value === loc.neighborhood);
-      if (!neighborhoodExists) {
-        city.neighborhoods.push({
-          label: formatLocationName(loc.neighborhood),
-          value: loc.neighborhood
+          neighborhoods: [
+            {
+              label: formatLocationName(loc.neighborhood),
+              value: loc.neighborhood,
+            },
+          ],
         });
       }
     }
