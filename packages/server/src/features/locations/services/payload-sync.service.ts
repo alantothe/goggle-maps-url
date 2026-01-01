@@ -254,8 +254,34 @@ export class PayloadSyncService {
     try {
       // Upload direct upload images (ALL images go to gallery)
       for (const upload of location.uploads) {
-        if (upload.images && upload.images.length > 0) {
+        // Handle discriminated union: LegacyUpload vs ImageSetUpload
+        if (upload.format === 'legacy' && upload.images && upload.images.length > 0) {
+          // Legacy format: direct image paths
           for (const imagePath of upload.images) {
+            try {
+              const imageBuffer = await this.imageStorage.readImage(imagePath);
+              const filename = imagePath.split("/").pop() || "image.jpg";
+              const altText = upload.photographerCredit ?
+                `Photo by ${upload.photographerCredit}` :
+                location.title || location.source.name;
+
+              const mediaAssetId = await this.payloadClient.uploadImage(
+                imageBuffer,
+                filename,
+                altText,
+                this.mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+              );
+
+              galleryImageIds.push(mediaAssetId);
+            } catch (error) {
+              console.warn(`⚠️  Failed to upload image ${imagePath}:`, error);
+              // Continue with other images
+            }
+          }
+        } else if (upload.format === 'imageset' && upload.imageSets && upload.imageSets.length > 0) {
+          // ImageSet format: extract paths from ImageSet objects
+          for (const imageSet of upload.imageSets) {
+            const imagePath = imageSet.sourceImage.path;
             try {
               const imageBuffer = await this.imageStorage.readImage(imagePath);
               const filename = imagePath.split("/").pop() || "image.jpg";
