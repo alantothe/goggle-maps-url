@@ -20,7 +20,7 @@ export function getLocationsBasic(c: Context) {
     query?.category,
     query?.locationKey
   );
-  return c.json({ locations });
+  return c.json(successResponse({ locations }));
 }
 
 export async function deleteLocationBySlug(c: Context) {

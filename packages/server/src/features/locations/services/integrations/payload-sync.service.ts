@@ -38,22 +38,8 @@ export class PayloadSyncService {
         throw new NotFoundError("Location", locationId);
       }
 
-      console.log("📍 Location details", {
-        locationId,
-        title: location.title || location.source.name,
-        category: location.category,
-        locationKey: location.locationKey || null,
-      });
-
-      console.log(`🔄 Syncing location ${locationId} (${location.title}) to Payload...`);
-
       // Resolve Payload location reference (REQUIRED by Payload)
       const locationRef = await resolvePayloadLocationRef(location, this.payloadClient);
-      console.log("🔗 Payload location ref", {
-        locationId,
-        locationKey: location.locationKey || null,
-        locationRef,
-      });
 
       // If locationRef is required by Payload but resolution failed, abort sync
       if (!locationRef) {
@@ -66,28 +52,8 @@ export class PayloadSyncService {
       // Upload images and create Instagram posts
       const uploadedImages = await uploadLocationImages(location, this.payloadClient, this.imageStorage);
 
-      if (uploadedImages.galleryImageIds.length === 0 &&
-          uploadedImages.instagramPostIds.length === 0) {
-        console.warn(
-          `⚠️  No images or Instagram posts found for location ${locationId}, syncing without media`
-        );
-      } else {
-        console.log(
-          `✓ Uploaded ${uploadedImages.galleryImageIds.length} gallery images, ` +
-          `created ${uploadedImages.instagramPostIds.length} Instagram posts`
-        );
-      }
-
       // Map location data to Payload format (locationRef is guaranteed at this point)
       const payloadData = mapLocationToPayloadFormat(location, uploadedImages, locationRef);
-      console.log("🧾 Payload entry payload", {
-        locationId,
-        collection,
-        title: payloadData.title,
-        locationRef: payloadData.locationRef,
-        galleryCount: payloadData.gallery.length,
-        instagramCount: payloadData.instagramGallery?.length || 0,
-      });
 
       // Upsert entry (update if exists by title, create if not)
       const response = await this.payloadClient.upsertEntry(collection, payloadData);
@@ -99,8 +65,6 @@ export class PayloadSyncService {
         response.doc.id,
         "success"
       );
-
-      console.log(`✅ Successfully synced location ${locationId} to Payload (doc ID: ${response.doc.id})`);
 
       return {
         locationId,
@@ -139,8 +103,6 @@ export class PayloadSyncService {
     // Get all locations
     const locations = this.locationQuery.listLocations(category);
 
-    console.log(`🔄 Starting batch sync: ${locations.length} locations`);
-
     const results: SyncResult[] = [];
 
     for (const location of locations) {
@@ -150,11 +112,6 @@ export class PayloadSyncService {
       // Small delay to avoid overwhelming Payload
       await new Promise(resolve => setTimeout(resolve, 500));
     }
-
-    const successCount = results.filter(r => r.status === "success").length;
-    const failedCount = results.filter(r => r.status === "failed").length;
-
-    console.log(`✅ Batch sync complete: ${successCount} success, ${failedCount} failed`);
 
     return results;
   }

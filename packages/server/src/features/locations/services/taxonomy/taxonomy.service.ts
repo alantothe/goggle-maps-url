@@ -36,19 +36,12 @@ export class TaxonomyService {
     }
 
     // Insert as pending
-    const inserted = insertPendingTaxonomyEntry(
+    return insertPendingTaxonomyEntry(
       parsed.country,
       parsed.city,
       parsed.neighborhood,
       locationKey
     );
-
-    if (inserted) {
-      console.log(`📍 New pending taxonomy entry created: ${locationKey}`);
-      return true;
-    }
-
-    return false;
   }
 
   /**

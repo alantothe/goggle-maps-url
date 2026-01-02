@@ -65,9 +65,6 @@ export class DistrictExtractionService {
 
     // Case 1: No country code - use default adminLevel 8 (current behavior)
     if (!countryCode) {
-      console.warn(
-        "[DistrictExtraction] No country code provided, using default adminLevel 8"
-      );
       return this.extractByAdminLevel(administrative, 8);
     }
 
@@ -82,9 +79,6 @@ export class DistrictExtractionService {
     // Case 2: Country not in mapping - use default adminLevel 8
     const adminLevels = this.adminLevelMapping.get(normalizedCode);
     if (!adminLevels || adminLevels.length === 0) {
-      console.warn(
-        `[DistrictExtraction] Country ${normalizedCode} not in mapping, using default adminLevel 8`
-      );
       return this.extractByAdminLevel(administrative, 8);
     }
 
@@ -92,19 +86,11 @@ export class DistrictExtractionService {
     for (const level of adminLevels) {
       const district = this.extractByAdminLevel(administrative, level);
       if (district) {
-        console.log(
-          `[DistrictExtraction] Found district for ${normalizedCode} at adminLevel ${level}: ${district}`
-        );
         return district;
       }
     }
 
     // Case 4: No match found at any configured level
-    console.warn(
-      `[DistrictExtraction] No district found for ${normalizedCode} at adminLevels ${adminLevels.join(
-        ", "
-      )}`
-    );
     return null;
   }
 
@@ -122,7 +108,6 @@ export class DistrictExtractionService {
     if (informative && informative.length > 0) {
       const zone = this.extractBrazilTourismZone(informative);
       if (zone) {
-        console.log(`[DistrictExtraction] Found Brazil tourism zone: ${zone}`);
         return zone;
       }
     }
@@ -130,24 +115,15 @@ export class DistrictExtractionService {
     // Priority 2: Fallback to bairro from adminLevel 10 (neighborhood level in Brazil)
     const bairro = this.extractByAdminLevel(administrative, 10);
     if (bairro) {
-      console.log(
-        `[DistrictExtraction] No Brazil zone found, using bairro from adminLevel 10: ${bairro}`
-      );
       return bairro;
     }
 
     // Priority 3: Final fallback to adminLevel 8 (municipality level)
     const municipality = this.extractByAdminLevel(administrative, 8);
     if (municipality) {
-      console.log(
-        `[DistrictExtraction] No bairro at level 10, using municipality from adminLevel 8: ${municipality}`
-      );
       return municipality;
     }
 
-    console.warn(
-      "[DistrictExtraction] No Brazil zone or bairro found, returning null"
-    );
     return null;
   }
 

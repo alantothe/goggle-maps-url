@@ -3,7 +3,16 @@ import type { Location } from "../../models/location";
 import { isLocationInScope } from "../../utils/location-utils";
 import { slugifyLocationPart } from "../../services/geocoding/location-geocoding.helper";
 
-
+/**
+ * Save a new location or update an existing one (upsert).
+ *
+ * Uses the UNIQUE constraint on (name, address) to determine if location exists.
+ * If location exists, updates all fields except id and created_at.
+ * Automatically generates a slug from the location name if not provided.
+ *
+ * @param location - Location object to save
+ * @returns The location ID on success, or false on failure
+ */
 export function saveLocation(location: Location): number | boolean {
   // Generate slug if not provided
   if (!location.slug && location.name) {
@@ -56,6 +65,16 @@ export function saveLocation(location: Location): number | boolean {
   }
 }
 
+/**
+ * Update specific fields of a location by ID (partial update).
+ *
+ * Dynamically builds the SQL UPDATE statement based on which fields are provided
+ * in the updates object. Only non-undefined fields will be updated.
+ *
+ * @param id - Location ID to update
+ * @param updates - Partial location object with fields to update
+ * @returns true if update succeeded, false if no fields provided or error occurred
+ */
 export function updateLocationById(id: number, updates: Partial<Location>): boolean {
   try {
     const db = getDb();
@@ -134,6 +153,15 @@ export function updateLocationById(id: number, updates: Partial<Location>): bool
   }
 }
 
+/**
+ * Get all locations with approved taxonomy.
+ *
+ * Returns locations that either have no locationKey or have a locationKey
+ * that is approved in the location_taxonomy table. Pending or unapproved
+ * locations are filtered out.
+ *
+ * @returns Array of all approved locations, sorted by creation date (newest first)
+ */
 export function getAllLocations(): Location[] {
   const db = getDb();
   const query = db.query(`
@@ -148,6 +176,12 @@ export function getAllLocations(): Location[] {
   return query.all() as Location[];
 }
 
+/**
+ * Get all locations in a specific category with approved taxonomy.
+ *
+ * @param category - Category to filter by (e.g., "dining", "attractions", "nightlife")
+ * @returns Array of locations in the specified category, sorted by creation date (newest first)
+ */
 export function getLocationsByCategory(category: string): Location[] {
   const db = getDb();
   const query = db.query(`
@@ -163,6 +197,12 @@ export function getLocationsByCategory(category: string): Location[] {
   return query.all({ $category: category }) as Location[];
 }
 
+/**
+ * Get a single location by ID with approved taxonomy.
+ *
+ * @param id - Location ID to retrieve
+ * @returns Location object if found and approved, null otherwise
+ */
 export function getLocationById(id: number): Location | null {
   const db = getDb();
   const query = db.query(`
@@ -178,6 +218,12 @@ export function getLocationById(id: number): Location | null {
   return row || null;
 }
 
+/**
+ * Get a single location by its URL-friendly slug.
+ *
+ * @param slug - URL slug to search for (e.g., "panchita-miraflores")
+ * @returns Location object if found, null otherwise
+ */
 export function getLocationBySlug(slug: string): Location | null {
   const db = getDb();
   const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE slug = $slug");
@@ -185,6 +231,11 @@ export function getLocationBySlug(slug: string): Location | null {
   return row || null;
 }
 
+/**
+ * Clear all data from the locations table (for development/testing only).
+ *
+ * WARNING: This deletes all locations permanently. Use with caution.
+ */
 export function clearDatabase() {
   try {
     const db = getDb();
@@ -199,6 +250,15 @@ export function clearDatabase() {
   }
 }
 
+/**
+ * Delete a location by ID along with all related content.
+ *
+ * Cascades deletion to related instagram_embeds and uploads tables.
+ * Note: File cleanup (images) is handled by the service layer, not here.
+ *
+ * @param id - Location ID to delete
+ * @returns true if deletion succeeded, false if location not found or error occurred
+ */
 export function deleteLocationById(id: number): boolean {
   try {
     const db = getDb();
@@ -226,6 +286,15 @@ export function deleteLocationById(id: number): boolean {
   }
 }
 
+/**
+ * Delete a location by its URL slug along with all related content.
+ *
+ * Cascades deletion to related instagram_embeds and uploads tables.
+ * Note: File cleanup (images) is handled by the service layer, not here.
+ *
+ * @param slug - Location slug to delete (e.g., "panchita-miraflores")
+ * @returns true if deletion succeeded, false if location not found or error occurred
+ */
 export function deleteLocationBySlug(slug: string): boolean {
   try {
     const db = getDb();

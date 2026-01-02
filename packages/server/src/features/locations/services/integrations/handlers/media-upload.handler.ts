@@ -3,6 +3,7 @@ import type { PayloadApiClient } from "@server/shared/services/external/payload-
 import { ImageStorageService } from "@server/shared/services/storage/image-storage.service";
 import type { UploadedImagesResult } from "../types";
 import { mapLocationKeyToPayloadLocation } from "../mappers";
+import type { ImageVariantType } from "@url-util/shared";
 
 /**
  * Upload images and create Instagram posts for a location
@@ -44,27 +45,45 @@ export async function uploadLocationImages(
           }
         }
       } else if (upload.format === 'imageset' && upload.imageSets && upload.imageSets.length > 0) {
-        // ImageSet format: extract paths from ImageSet objects
+        // ImageSet format: upload ONLY variants (skip source image)
         for (const imageSet of upload.imageSets) {
-          const imagePath = imageSet.sourceImage.path;
-          try {
-            const imageBuffer = await imageStorage.readImage(imagePath);
-            const filename = imagePath.split("/").pop() || "image.jpg";
-            const altText = upload.photographerCredit ?
-              `Photo by ${upload.photographerCredit}` :
-              location.title || location.source.name;
+          // Validate variants exist
+          if (!imageSet.variants || imageSet.variants.length === 0) {
+            console.warn(`⚠️  ImageSet ${imageSet.id} has no variants, skipping`);
+            continue;
+          }
 
-            const mediaAssetId = await payloadClient.uploadImage(
-              imageBuffer,
-              filename,
-              altText,
-              mapLocationKeyToPayloadLocation(location.locationKey || undefined)
-            );
+          // Define standard variant order for consistent upload sequence
+          const variantOrder: ImageVariantType[] = ['thumbnail', 'square', 'wide', 'portrait', 'hero'];
 
-            galleryImageIds.push(mediaAssetId);
-          } catch (error) {
-            console.warn(`⚠️  Failed to upload image ${imagePath}:`, error);
-            // Continue with other images
+          // Upload each variant in standard order
+          for (const variantType of variantOrder) {
+            const variant = imageSet.variants.find(v => v.type === variantType);
+
+            if (!variant) {
+              console.warn(`⚠️  ImageSet ${imageSet.id} missing variant: ${variantType}`);
+              continue; // Skip missing variant, proceed with others
+            }
+
+            try {
+              const imageBuffer = await imageStorage.readImage(variant.path);
+              const filename = variant.path.split("/").pop() || "image.jpg";
+
+              // Use variant type as alt text (e.g., "thumbnail", "square")
+              const altText = variantType;
+
+              const mediaAssetId = await payloadClient.uploadImage(
+                imageBuffer,
+                filename,
+                altText,
+                mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+              );
+
+              galleryImageIds.push(mediaAssetId);
+            } catch (error) {
+              console.warn(`⚠️  Failed to upload variant ${variantType} for ImageSet ${imageSet.id}:`, error);
+              // Continue with remaining variants (graceful degradation)
+            }
           }
         }
       }
@@ -91,8 +110,6 @@ export async function uploadLocationImages(
             mapLocationKeyToPayloadLocation(location.locationKey || undefined)
           );
 
-          console.log(`✓ Uploaded Instagram preview image: ${previewMediaAssetId}`);
-
           // Step 2: Create Instagram post with preview image
           const postTitle = createInstagramPostTitle(embed.username, location);
           const instagramPostId = await payloadClient.createInstagramPost({
@@ -103,7 +120,6 @@ export async function uploadLocationImages(
           });
 
           instagramPostIds.push(instagramPostId);
-          console.log(`✓ Created Instagram post: ${instagramPostId}`);
 
         } catch (error) {
           if (previewMediaAssetId) {

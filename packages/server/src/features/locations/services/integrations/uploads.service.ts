@@ -68,9 +68,7 @@ export class UploadsService {
         // Construct absolute path - savedPaths are relative to cwd
         const fullPath = join(process.cwd(), path);
         try {
-          console.log(`Extracting metadata from: ${fullPath}`);
           const meta = await extractImageMetadata(fullPath);
-          console.log(`Metadata extracted:`, meta);
           metadata.push(meta);
         } catch (error) {
           console.error(`Failed to extract metadata for ${path}:`, error);
@@ -260,10 +258,7 @@ export class UploadsService {
         throw new BadRequestError(`Image file not found at: ${filePath}`);
       }
 
-      console.log(`Extracting metadata from: ${fullPath}`);
       const meta = await extractImageMetadata(fullPath);
-      console.log(`✓ Metadata extracted: ${meta.width}x${meta.height}, ${meta.size} bytes, ${meta.format}`);
-
       return meta;
     } catch (error) {
       console.error(`Failed to extract metadata for ${filePath}:`, error);

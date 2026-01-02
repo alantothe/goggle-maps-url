@@ -113,14 +113,12 @@ export class InstagramService {
 
     const firstImage = embed.images[0];
     if (!firstImage) {
-      console.warn("First image path is undefined");
-      return;
+      return; // No valid image path to clean up
     }
 
     const metadata = this.imageStorage.extractPathMetadata(firstImage);
     if (!metadata) {
-      console.warn("Could not extract path metadata", { path: firstImage });
-      return;
+      return; // Cannot determine cleanup path
     }
 
     // 4. Delete timestamp folder and cleanup empty parents

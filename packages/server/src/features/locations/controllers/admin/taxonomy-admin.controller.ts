@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { ServiceContainer } from "@server/features/locations/container/service-container";
-import { successResponse } from "@server/shared/core/types/api-response";
+import { successResponse } from "@shared/types/api-response";
 
 const container = ServiceContainer.getInstance();
 

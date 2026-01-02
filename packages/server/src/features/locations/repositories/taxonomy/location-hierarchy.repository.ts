@@ -22,16 +22,6 @@ interface LocationHierarchyDbRow {
   created_at?: string;
 }
 
-function mapHierarchyRow(row: LocationHierarchyDbRow): LocationHierarchy {
-  return {
-    id: row.id,
-    country: row.country,
-    city: row.city,
-    neighborhood: row.neighborhood,
-    locationKey: row.locationKey,
-  };
-}
-
 /**
  * Get all location hierarchy entries (approved only)
  */
@@ -43,8 +33,7 @@ export function getAllLocationHierarchy(): LocationHierarchy[] {
     WHERE status = 'approved'
     ORDER BY locationKey
   `);
-  const rows = query.all() as LocationHierarchyDbRow[];
-  return rows.map(mapHierarchyRow);
+  return query.all() as LocationHierarchy[];
 }
 
 /**
@@ -125,7 +114,11 @@ export function getTaxonomyEntry(locationKey: string): LocationHierarchy | null 
   const row = query.get({ $locationKey: locationKey }) as LocationHierarchyDbRow | undefined;
   if (!row) return null;
   return {
-    ...mapHierarchyRow(row),
+    id: row.id,
+    country: row.country,
+    city: row.city,
+    neighborhood: row.neighborhood,
+    locationKey: row.locationKey,
     status: row.status as 'approved' | 'pending' | undefined,
     created_at: row.created_at
   };
@@ -159,7 +152,6 @@ export function insertPendingTaxonomyEntry(
     return getTaxonomyEntry(locationKey);
   } catch (error) {
     // UNIQUE constraint violation - entry already exists
-    console.warn(`Taxonomy entry already exists: ${locationKey}`);
     return null;
   }
 }
@@ -214,7 +206,11 @@ export function getPendingTaxonomyEntries(): LocationHierarchy[] {
   `);
   const rows = query.all() as LocationHierarchyDbRow[];
   return rows.map(row => ({
-    ...mapHierarchyRow(row),
+    id: row.id,
+    country: row.country,
+    city: row.city,
+    neighborhood: row.neighborhood,
+    locationKey: row.locationKey,
     status: 'pending' as const,
     created_at: row.created_at
   }));
@@ -235,9 +231,26 @@ export function getLocationCountByTaxonomy(locationKey: string): number {
 }
 
 /**
- * Remove duplicate pending taxonomy entries before bulk update
- * Keeps oldest entry for each unique corrected locationKey
+ * Remove duplicate pending taxonomy entries before bulk update.
+ *
+ * Duplicates can occur when multiple locations are created simultaneously
+ * with the same locationKey, or when bulk corrections would create
+ * multiple pending entries with identical corrected locationKeys.
+ *
+ * This function identifies entries that would have the same locationKey
+ * after applying the correction (replacing incorrectValue with correctValue)
+ * and removes all but the oldest entry (by created_at timestamp).
+ *
+ * @param incorrectValue - The incorrect value to be replaced in locationKey
+ * @param correctValue - The correct value to replace it with
+ * @param partType - Which part of the location hierarchy to target (country, city, or neighborhood)
  * @returns Count of deleted duplicate entries
+ *
+ * @example
+ * // Before: ["colombia|bogotá", "colombia|bogotá", "colombia|bogota"]
+ * deduplicatePendingTaxonomy("bogotá", "bogota", "city");
+ * // After: ["colombia|bogotá"] (oldest entry kept, 2 deleted)
+ * // Returns: 2
  */
 export function deduplicatePendingTaxonomy(
   incorrectValue: string,
@@ -289,8 +302,26 @@ export function deduplicatePendingTaxonomy(
 }
 
 /**
- * Update all pending taxonomy entries by replacing a value in locationKey
+ * Update all pending taxonomy entries by replacing a value in locationKey.
+ *
+ * This function performs a bulk correction on pending taxonomy entries,
+ * replacing an incorrect value with a correct value in the locationKey.
+ * It also updates the corresponding column (country, city, or neighborhood)
+ * to maintain data consistency.
+ *
+ * Should be called after deduplicatePendingTaxonomy() to prevent
+ * creating duplicate entries with the same corrected locationKey.
+ *
+ * @param incorrectValue - The incorrect value to be replaced
+ * @param correctValue - The correct value to replace it with
+ * @param partType - Which part of the location hierarchy to target (country, city, or neighborhood)
  * @returns Count of updated entries
+ *
+ * @example
+ * // Fix misspelled city name in all pending entries
+ * bulkUpdatePendingTaxonomy("bogotá", "bogota", "city");
+ * // Updates: "colombia|bogotá|chapinero" → "colombia|bogota|chapinero"
+ * // Also updates the city column from "bogotá" to "bogota"
  */
 export function bulkUpdatePendingTaxonomy(
   incorrectValue: string,

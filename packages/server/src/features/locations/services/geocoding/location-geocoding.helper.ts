@@ -181,8 +181,7 @@ async function reverseGeocodeWithGeoapify(
     const container = ServiceContainer.getInstance();
 
     if (!container.geoapifyClient.isConfigured()) {
-      console.warn("Geoapify not configured, skipping reverse geocoding");
-      return null;
+      return null; // API not configured
     }
 
     const data = await container.geoapifyClient.reverseGeocode(latitude, longitude);
@@ -316,7 +315,6 @@ export async function createFromMaps(
           }
         }
       } catch (reverseGeoError) {
-        console.warn("Failed to fetch reverse geocoding:", reverseGeoError);
         // locationKey and district stay null if reverse geocoding fails
       }
     }
@@ -345,7 +343,6 @@ export async function createFromMaps(
         }
       }
     } catch (placesError) {
-      console.warn("Failed to fetch place details:", placesError);
       // Continue without place details - geocoding still worked
     }
   } catch (e) {
@@ -353,7 +350,7 @@ export async function createFromMaps(
     if (e instanceof BadRequestError) {
       throw e;
     }
-    console.warn("Failed to fetch coordinates in createFromMaps:", e);
+    // Continue without coordinates
   }
 
   return entry;
@@ -374,13 +371,11 @@ export function createFromInstagram(embedHtml: string, locationId: number): Inst
       const cleaned = author.trim().split(/\s+/)[0]!.replace(/[^a-zA-Z0-9._]/g, "");
       if (cleaned) {
         username = `@${cleaned}`;
-      } else {
-        console.warn("Failed to extract username from author text:", author);
       }
+      // If extraction fails, username stays "Unknown"
     }
-  } else {
-    console.warn("No author found in Instagram embed code. Username will default to 'Unknown'.");
   }
+  // If no author found, username defaults to "Unknown"
 
   return {
     location_id: locationId,
