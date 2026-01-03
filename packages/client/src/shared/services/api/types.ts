@@ -43,28 +43,17 @@ export interface ImageMetadata {
   format: string; // 'jpeg', 'png', 'webp', 'gif'
 }
 
-// Legacy Upload format (backward compatibility)
-export interface LegacyUpload {
-  id?: number;
-  location_id: number;
-  photographerCredit?: string | null;
-  images?: string[];
-  imageMetadata?: ImageMetadata[]; // Metadata for each image (parallel array)
-  created_at?: string;
-  format: 'legacy';
-}
-
 // ImageSet Upload format (multi-variant system)
 export interface ImageSetUpload {
   id?: number;
   location_id: number;
-  imageSets?: ImageSet[];
+  imageSet?: ImageSet;
   created_at?: string;
   format: 'imageset';
 }
 
-// Discriminated union
-export type Upload = LegacyUpload | ImageSetUpload;
+// Upload type - now only supports ImageSet format
+export type Upload = ImageSetUpload;
 
 export interface Location {
   id: number;

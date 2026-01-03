@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSyncStatus, useSyncLocation, useSyncAll, usePayloadConnection } from "@client/shared/services/api/hooks/usePayloadSync";
+import { useClearDatabase } from "@client/shared/services/api/hooks";
+import { useToast } from "@client/shared/hooks/useToast";
 import { Button } from "@client/components/ui/button";
 import {
   Select,
@@ -8,6 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@client/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@client/components/ui/alert-dialog";
 import type { Category } from "@client/shared/services/api/types";
 import type { SyncStatusResponse } from "@client/shared/services/api/payload.api";
 
@@ -18,6 +31,8 @@ export function PayloadSync() {
   const syncLocationMutation = useSyncLocation();
   const syncAllMutation = useSyncAll();
   const { data: connectionStatus, isLoading: isConnecting, refetch: testConnection } = usePayloadConnection();
+  const clearDatabaseMutation = useClearDatabase();
+  const { showToast } = useToast();
 
   const [syncingId, setSyncingId] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
@@ -72,6 +87,23 @@ export function PayloadSync() {
     await syncAllMutation.mutateAsync(category);
   };
 
+  const handleClearDatabase = async () => {
+    try {
+      await clearDatabaseMutation.mutateAsync();
+      showToast({
+        title: "Database Cleared",
+        description: "All location data and caches have been cleared successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      showToast({
+        title: "Error",
+        description: "Failed to clear database. Please try again.",
+        variant: "error",
+      });
+    }
+  };
+
   const getSyncStatusBadge = (item: SyncStatusResponse) => {
     if (!item.syncState) {
       return <span className="px-2 py-1 text-xs rounded bg-gray-200 text-gray-700">Not Synced</span>;
@@ -100,13 +132,43 @@ export function PayloadSync() {
     <div className="container mx-auto py-8 px-4">
       <div data-theme="light" className="bg-background rounded-lg shadow-lg p-6">
         {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-[24px] font-bold mb-2 text-foreground underline">
-            Payload CMS Sync
-          </h2>
-          <p className="text-muted-foreground">
-            Sync location data from url-util to Payload CMS. Images are uploaded to Bunny CDN via Payload.
-          </p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h2 className="text-[24px] font-bold mb-2 text-foreground underline">
+              Payload CMS Sync
+            </h2>
+            <p className="text-muted-foreground">
+              Sync location data from url-util to Payload CMS. Images are uploaded to Bunny CDN via Payload.
+            </p>
+          </div>
+
+          {/* Clear Database Button with Confirmation Modal */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                Clear Database
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will permanently delete all locations, Instagram embeds, uploads, and taxonomy data from the database.
+                  This cannot be undone. All cached data will also be cleared.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleClearDatabase}
+                  className="bg-red-600 hover:bg-red-700"
+                  disabled={clearDatabaseMutation.isPending}
+                >
+                  {clearDatabaseMutation.isPending ? "Clearing..." : "Yes, clear database"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Connection Status */}

@@ -193,9 +193,9 @@ async function main() {
       process.exit(1);
     }
 
-    const images: string[] = data.entry?.images || [];
+    const images: string[] = data.data.entry?.images || [];
     console.log("\n✅ Upload succeeded");
-    console.log(`   Entry ID: ${data.entry?.id}`);
+    console.log(`   Entry ID: ${data.data.entry?.id}`);
     console.log(`   Files saved: ${images.length}`);
     if (images.length > 0) {
       images.forEach((img: string) => console.log(`   - ${img}`));

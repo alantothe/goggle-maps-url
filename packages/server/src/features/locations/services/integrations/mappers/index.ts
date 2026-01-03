@@ -2,3 +2,4 @@ export { mapLocationToPayloadFormat, mapCategoryToCollection, mapCategoryToType,
 
 
 
+

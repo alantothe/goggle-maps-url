@@ -23,3 +23,4 @@ export {
   APPROVED_TAXONOMY_QUERY_KEY,
 } from "./useApprovedTaxonomy";
 export { useGenerateAltText } from "./useGenerateAltText";
+export { useClearDatabase } from "./useClearDatabase";

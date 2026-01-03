@@ -15,6 +15,8 @@ import { addUploadMetadata } from "./migrations/add-upload-metadata";
 import { migrateToImageSets } from "./migrations/add-image-sets";
 import { addUploadAltTexts } from "./migrations/add-upload-alt-texts";
 import { removeUploadRedundantFields } from "./migrations/remove-upload-redundant-fields";
+import { removeUnusedUploadFields } from "./migrations/remove-unused-upload-fields";
+import { convertImageSetsToSingleObject } from "./migrations/convert-imagesets-to-single-object";
 
 let db: Database | null = null;
 
@@ -167,6 +169,12 @@ export function initDb() {
 
   // Run migration to remove redundant photographerCredit and altTexts columns from uploads table
   removeUploadRedundantFields();
+
+  // Run migration to remove unused images and imageMetadata columns from uploads table
+  removeUnusedUploadFields();
+
+  // Run migration to convert imageSets from array to single object
+  convertImageSetsToSingleObject();
 }
 
 export function getDb(): Database {

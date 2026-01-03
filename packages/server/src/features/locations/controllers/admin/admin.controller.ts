@@ -48,11 +48,17 @@ export async function clearDatabase(c: Context) {
     db.run("DELETE FROM sqlite_sequence WHERE name='taxonomy_corrections'");
   }
 
+  // Clear Payload sync state
+  if (tables.has("payload_sync_state")) {
+    db.run("DELETE FROM payload_sync_state");
+    db.run("DELETE FROM sqlite_sequence WHERE name='payload_sync_state'");
+  }
+
   // Clean up file size after mass deletes
   db.run("VACUUM");
 
   const clearedTables = Array.from(tables).filter((name) =>
-    ["locations", "instagram_embeds", "uploads", "location", "location_taxonomy", "taxonomy_corrections"].includes(name)
+    ["locations", "instagram_embeds", "uploads", "location", "location_taxonomy", "taxonomy_corrections", "payload_sync_state"].includes(name)
   );
 
   return c.json({

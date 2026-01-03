@@ -79,37 +79,21 @@ export interface ImageMetadata {
 }
 
 /**
- * Legacy Upload (backward compatibility)
- * Represents the old single-image upload format with parallel arrays
- */
-export interface LegacyUpload {
-  id?: number;
-  location_id: number;  // FK to locations table
-  photographerCredit?: string | null;  // Optional photographer attribution
-  images?: string[];
-  imageMetadata?: ImageMetadata[];  // Metadata for each image (parallel array)
-  altTexts?: string[];  // AI-generated alt text for each image (parallel array)
-  created_at?: string;
-  format: 'legacy';  // Discriminator for union type
-}
-
-/**
  * ImageSet Upload (multi-variant system)
- * Represents the new multi-variant upload format with ImageSet structure
+ * Represents the multi-variant upload format with ImageSet structure
  */
 export interface ImageSetUpload {
   id?: number;
   location_id: number;  // FK to locations table
-  imageSets?: import('@url-util/shared').ImageSet[];  // Array of ImageSet objects
+  imageSet?: import('@url-util/shared').ImageSet;  // Single ImageSet object
   created_at?: string;
-  format: 'imageset';  // Discriminator for union type
+  format: 'imageset';  // Format discriminator
 }
 
 /**
- * Upload (discriminated union)
- * Union type supporting both legacy and imageset formats for backward compatibility
+ * Upload type - now only supports ImageSet format
  */
-export type Upload = LegacyUpload | ImageSetUpload;
+export type Upload = ImageSetUpload;
 
 /**
  * Location with nested children (API response type)

@@ -27,9 +27,24 @@ export function migrateUploadsToPhotographerCredit() {
     return;
   }
 
+  // Skip if images column doesn't exist - this migration may have been made obsolete
+  // by later migrations that removed the images column entirely
+  const hasImages = columnCheck.some((col: any) => col.name === 'images');
+  if (!hasImages) {
+    console.log("⏭️  Skipping uploads migration: images column not found (migration may be obsolete)");
+    return;
+  }
+
   console.log("🔄 Migrating uploads table: replacing name/address/url with photographerCredit...");
 
-  // 1. Create new table with photographerCredit instead of name/address/url
+  // 1. Drop uploads_new table if it exists (cleanup from failed previous migrations)
+  try {
+    db.run(`DROP TABLE IF EXISTS uploads_new`);
+  } catch (error) {
+    console.log("  ⚠️  Could not drop existing uploads_new table, continuing...");
+  }
+
+  // 2. Create new table with photographerCredit instead of name/address/url
   db.run(`
     CREATE TABLE uploads_new (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

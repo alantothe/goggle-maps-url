@@ -25,6 +25,23 @@ export function removeUploadRedundantFields(): boolean {
       return true;
     }
 
+    // Check if images column exists (needed for the migration)
+    const hasImages = tableInfo.some((col) => col.name === "images");
+    const hasImageMetadata = tableInfo.some((col) => col.name === "imageMetadata");
+
+    if (!hasImages || !hasImageMetadata) {
+      console.log("  ✓ Images columns not found - migration may be obsolete due to later migrations");
+      db.run("ROLLBACK");
+      return true;
+    }
+
+    // Drop uploads_new table if it exists (cleanup from failed previous migrations)
+    try {
+      db.run(`DROP TABLE IF EXISTS uploads_new`);
+    } catch (error) {
+      console.log("  ⚠️  Could not drop existing uploads_new table, continuing...");
+    }
+
     // Create new table without the redundant columns
     db.run(`
       CREATE TABLE uploads_new (
@@ -32,7 +49,7 @@ export function removeUploadRedundantFields(): boolean {
         location_id INTEGER NOT NULL,
         images TEXT,
         imageMetadata TEXT,
-        imageSets TEXT,
+        imageSets TEXT,  -- Stores single ImageSet object as JSON
         uploadFormat TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(location_id) REFERENCES locations(id) ON DELETE CASCADE
@@ -71,3 +88,4 @@ export function removeUploadRedundantFields(): boolean {
     return false;
   }
 }
+

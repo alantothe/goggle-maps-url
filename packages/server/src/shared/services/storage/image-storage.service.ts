@@ -487,18 +487,16 @@ export class ImageStorageService {
 
         // ImageSet format
         if (upload.imageSets) {
-          const imageSets = JSON.parse(upload.imageSets);
-          for (const imageSet of imageSets) {
-            // Add source image
-            if (imageSet.sourceImage?.path) {
-              paths.push(imageSet.sourceImage.path);
-            }
-            // Add variants
-            if (imageSet.variants) {
-              for (const variant of imageSet.variants) {
-                if (variant.path) {
-                  paths.push(variant.path);
-                }
+          const imageSet = JSON.parse(upload.imageSets);
+          // Add source image
+          if (imageSet.sourceImage?.path) {
+            paths.push(imageSet.sourceImage.path);
+          }
+          // Add variants
+          if (imageSet.variants) {
+            for (const variant of imageSet.variants) {
+              if (variant.path) {
+                paths.push(variant.path);
               }
             }
           }

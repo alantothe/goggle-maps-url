@@ -393,9 +393,8 @@ export function createFromUpload(
 ): Upload {
   return {
     location_id: locationId,
-    photographerCredit: photographerCredit || null,
-    images: [],
-    format: 'legacy',
+    imageSet: undefined,
+    format: 'imageset',
   };
 }
 
@@ -404,7 +403,7 @@ export function createFromImageSetUpload(
 ): import('../models/location').ImageSetUpload {
   return {
     location_id: locationId,
-    imageSets: [],
+    imageSet: undefined,
     format: 'imageset',
   };
 }

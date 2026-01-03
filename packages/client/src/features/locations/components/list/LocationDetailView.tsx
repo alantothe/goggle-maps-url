@@ -59,23 +59,10 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
     },
   });
 
-  function handleImageClick(upload: Upload, imageIndex: number) {
-    if ('images' in upload) {
-      setLightboxState({
-        isOpen: true,
-        images: upload.images || [],
-        currentIndex: imageIndex,
-        photographerCredit: upload.photographerCredit || undefined,
-        imageMetadata: upload.imageMetadata,
-        instagramUrl: undefined,
-        embedCode: undefined,
-      });
-    }
-  }
 
-  function handleImageSetClick(upload: Upload, imageSetIndex: number) {
-    if ('imageSets' in upload && upload.imageSets) {
-      const imageSet = upload.imageSets[imageSetIndex];
+  function handleImageSetClick(upload: Upload) {
+    if ('imageSet' in upload && upload.imageSet) {
+      const imageSet = upload.imageSet;
       if (imageSet && imageSet.variants) {
         // Extract all variant paths for the lightbox
         const variantPaths = imageSet.variants.map((v: ImageVariant) => v.path);
@@ -263,26 +250,26 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
               Uploaded Images:
             </span>
             <ul className="flex gap-2 ml-4 flex-wrap">
-              {locationDetail.uploads.flatMap((upload) => {
-                // Handle ImageSet format (new multi-variant system)
-                if (upload.format === 'imageset' && upload.imageSets) {
-                  return upload.imageSets.map((imageSet, setIdx) => {
-                    // Find square variant (1:1 aspect ratio) for display
-                    const squareVariant = imageSet.variants?.find(v => v.type === 'square');
-                    if (!squareVariant) return null;
+              {locationDetail.uploads.map((upload) => {
+                // Handle ImageSet format (multi-variant system)
+                if (upload.imageSet) {
+                  const imageSet = upload.imageSet;
+                  // Find square variant (1:1 aspect ratio) for display
+                  const squareVariant = imageSet.variants?.find(v => v.type === 'square');
+                  if (!squareVariant) return null;
 
-                    const imageUrl = `/api/images/${squareVariant.path.replace(/^data\/images\//, '')}`;
-                    return (
-                      <li key={`${upload.id}-set-${setIdx}`} className="relative group">
-                        <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
-                          <img
-                            src={imageUrl}
-                            alt={imageSet.altText || imageSet.photographerCredit || "Uploaded image"}
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                            loading="lazy"
-                            onClick={() => handleImageSetClick(upload, setIdx)}
-                            title={imageSet.photographerCredit || "Click to view all variants"}
-                          />
+                  const imageUrl = `/api/images/${squareVariant.path.replace(/^data\/images\//, '')}`;
+                  return (
+                    <li key={`${upload.id}-imageset`} className="relative group">
+                      <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
+                        <img
+                          src={imageUrl}
+                          alt={imageSet.altText || imageSet.photographerCredit || "Uploaded image"}
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                          loading="lazy"
+                          onClick={() => handleImageSetClick(upload)}
+                          title={imageSet.photographerCredit || "Click to view all variants"}
+                        />
                         </div>
                         {/* Badge showing variant count */}
                         <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none">
@@ -299,40 +286,9 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
                         </Button>
                       </li>
                     );
-                  }).filter(Boolean);
                 }
 
-                // Handle legacy format (old single-image system)
-                if (upload.format === 'legacy') {
-                  return (upload.images || []).map((imagePath: string, idx: number) => {
-                    const imageUrl = `/api/images/${imagePath.replace(/^data\/images\//, '')}`;
-                    return (
-                      <li key={`${upload.id}-${idx}`} className="relative group">
-                        <div className="shrink-0 w-[120px] h-[120px] overflow-hidden rounded bg-gray-100 hover:ring-2 ring-blue-400 transition-all">
-                          <img
-                            src={imageUrl}
-                            alt={upload.photographerCredit || "Uploaded image"}
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                            loading="lazy"
-                            onClick={() => handleImageClick(upload, idx)}
-                            title={upload.photographerCredit || "Click to view"}
-                          />
-                        </div>
-                        {/* Delete button */}
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteUpload(upload.id!)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </li>
-                    );
-                  });
-                }
-
-                return [];
+                return null;
               })}
             </ul>
           </div>

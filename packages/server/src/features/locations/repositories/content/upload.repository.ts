@@ -1,5 +1,5 @@
 import { getDb } from "@server/shared/db/client";
-import type { Upload, LegacyUpload, ImageSetUpload } from "../../models/location";
+import type { Upload, ImageSetUpload } from "../../models/location";
 
 /**
  * Database row interface for uploads table
@@ -7,117 +7,63 @@ import type { Upload, LegacyUpload, ImageSetUpload } from "../../models/location
 interface UploadDbRow {
   id: number;
   location_id: number;
-  images: string | null;
-  imageMetadata: string | null;
+  // images: string | null; // REMOVED: Column no longer exists
+  // imageMetadata: string | null; // REMOVED: Column no longer exists
   imageSets: string | null;
   uploadFormat: string;
   created_at: string;
 }
 
 /**
- * Maps a database row to the appropriate Upload type (legacy or imageset)
- * Uses uploadFormat column as discriminator
+ * Maps a database row to ImageSetUpload format
+ * All uploads are now stored in ImageSet format
  */
 function mapRow(row: UploadDbRow): Upload {
-  const format = row.uploadFormat || 'legacy';
-
-  if (format === 'imageset') {
-    // Map to ImageSetUpload
-    return {
-      ...row,
-      imageSets: row.imageSets ? JSON.parse(row.imageSets) : [],
-      format: 'imageset',
-    } as ImageSetUpload;
-  } else {
-    // Map to LegacyUpload
-    return {
-      ...row,
-      images: row.images ? JSON.parse(row.images) : [],
-      imageMetadata: row.imageMetadata ? JSON.parse(row.imageMetadata) : [],
-      format: 'legacy',
-    } as LegacyUpload;
-  }
+  return {
+    ...row,
+    imageSet: row.imageSets ? JSON.parse(row.imageSets) : undefined,
+    format: 'imageset',
+  } as ImageSetUpload;
 }
 
 /**
- * Saves an upload to the database (supports both legacy and imageset formats)
+ * Saves an ImageSetUpload to the database
  * Returns the upload ID on success, or false on failure
  */
 export function saveUpload(upload: Upload): number | boolean {
   try {
     const db = getDb();
+    const imageSetUpload = upload as ImageSetUpload;
 
-    if (upload.format === 'imageset') {
-      // Handle ImageSetUpload format
-      const imageSetUpload = upload as ImageSetUpload;
+    if (imageSetUpload.id) {
+      // Update existing
+      const query = db.query(`
+        UPDATE uploads
+        SET imageSets = $imageSets,
+            uploadFormat = 'imageset'
+        WHERE id = $id
+      `);
 
-      if (imageSetUpload.id) {
-        // Update existing
-        const query = db.query(`
-          UPDATE uploads
-          SET imageSets = $imageSets,
-              uploadFormat = 'imageset'
-          WHERE id = $id
-        `);
+      query.run({
+        $id: imageSetUpload.id,
+        $imageSets: imageSetUpload.imageSet ? JSON.stringify(imageSetUpload.imageSet) : null,
+      });
 
-        query.run({
-          $id: imageSetUpload.id,
-          $imageSets: imageSetUpload.imageSets ? JSON.stringify(imageSetUpload.imageSets) : null,
-        });
-
-        return imageSetUpload.id;
-      } else {
-        // Insert new
-        const query = db.query(`
-          INSERT INTO uploads (location_id, imageSets, uploadFormat)
-          VALUES ($location_id, $imageSets, 'imageset')
-        `);
-
-        query.run({
-          $location_id: imageSetUpload.location_id,
-          $imageSets: imageSetUpload.imageSets ? JSON.stringify(imageSetUpload.imageSets) : null,
-        });
-
-        const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
-        return result.id;
-      }
+      return imageSetUpload.id;
     } else {
-      // Handle LegacyUpload format
-      const legacyUpload = upload as LegacyUpload;
+      // Insert new
+      const query = db.query(`
+        INSERT INTO uploads (location_id, imageSets, uploadFormat)
+        VALUES ($location_id, $imageSets, 'imageset')
+      `);
 
-      if (legacyUpload.id) {
-        // Update existing
-        const query = db.query(`
-          UPDATE uploads
-          SET images = $images,
-              imageMetadata = $imageMetadata,
-              uploadFormat = 'legacy'
-          WHERE id = $id
-        `);
+      query.run({
+        $location_id: imageSetUpload.location_id,
+        $imageSets: imageSetUpload.imageSet ? JSON.stringify(imageSetUpload.imageSet) : null,
+      });
 
-        query.run({
-          $id: legacyUpload.id,
-          $images: legacyUpload.images ? JSON.stringify(legacyUpload.images) : null,
-          $imageMetadata: legacyUpload.imageMetadata ? JSON.stringify(legacyUpload.imageMetadata) : null,
-        });
-
-        return legacyUpload.id;
-      } else {
-        // Insert new
-        const query = db.query(`
-          INSERT INTO uploads (location_id, images, imageMetadata, uploadFormat)
-          VALUES ($location_id, $images, $imageMetadata, 'legacy')
-        `);
-
-        query.run({
-          $location_id: legacyUpload.location_id,
-          $images: legacyUpload.images ? JSON.stringify(legacyUpload.images) : null,
-          $imageMetadata: legacyUpload.imageMetadata ? JSON.stringify(legacyUpload.imageMetadata) : null,
-        });
-
-        const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
-        return result.id;
-      }
+      const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
+      return result.id;
     }
   } catch (error) {
     console.error("Error saving upload to DB:", error);
@@ -128,7 +74,7 @@ export function saveUpload(upload: Upload): number | boolean {
 export function getUploadById(id: number): Upload | null {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, images, imageMetadata, imageSets, uploadFormat, created_at
+    SELECT id, location_id, imageSets, uploadFormat, created_at
     FROM uploads
     WHERE id = $id
   `);
@@ -140,7 +86,7 @@ export function getUploadById(id: number): Upload | null {
 export function getUploadsByLocationId(locationId: number): Upload[] {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, images, imageMetadata, imageSets, uploadFormat, created_at
+    SELECT id, location_id, imageSets, uploadFormat, created_at
     FROM uploads
     WHERE location_id = $locationId
     ORDER BY created_at DESC
@@ -152,7 +98,7 @@ export function getUploadsByLocationId(locationId: number): Upload[] {
 export function getAllUploads(): Upload[] {
   const db = getDb();
   const query = db.query(`
-    SELECT id, location_id, images, imageMetadata, imageSets, uploadFormat, created_at
+    SELECT id, location_id, imageSets, uploadFormat, created_at
     FROM uploads
     ORDER BY created_at DESC
   `);
@@ -173,7 +119,7 @@ export function getUploadsByLocationIds(locationIds: number[]): Map<number, Uplo
   const db = getDb();
   const placeholders = locationIds.map(() => '?').join(',');
   const query = db.query(`
-    SELECT id, location_id, images, imageMetadata, imageSets, uploadFormat, created_at
+    SELECT id, location_id, imageSets, uploadFormat, created_at
     FROM uploads
     WHERE location_id IN (${placeholders})
     ORDER BY created_at DESC

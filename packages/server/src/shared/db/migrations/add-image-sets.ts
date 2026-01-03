@@ -7,7 +7,7 @@ import { getDb } from "../client";
  * backward compatibility with existing single-image uploads.
  *
  * Changes:
- * - Adds `imageSets` TEXT column to store JSON array of ImageSet objects
+ * - Adds `imageSets` TEXT column to store JSON ImageSet object
  * - Adds `uploadFormat` TEXT column to discriminate between 'legacy' and 'imageset' formats
  * - Sets default uploadFormat='legacy' for all existing rows
  */

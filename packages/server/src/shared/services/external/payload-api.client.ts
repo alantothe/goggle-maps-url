@@ -22,7 +22,7 @@ export interface PayloadMediaAssetResponse {
     width: number;
     height: number;
     url: string;
-    alt_text?: string;
+    altText?: string;
     location?: string;
     createdAt: string;
     updatedAt: string;
@@ -196,6 +196,9 @@ export class PayloadApiClient {
 
     console.log(`✓ Authenticated with Payload. Token expires: ${new Date(this.tokenExpiry)}`);
 
+    // Log the token for Postman testing
+    console.log('🔑 PAYLOAD JWT TOKEN:', data.token);
+
     return data.token;
   }
 
@@ -221,8 +224,11 @@ export class PayloadApiClient {
   async uploadImage(
     fileBuffer: Buffer,
     filename: string,
-    altText?: string,
-    location?: string
+    altText: string,
+    options?: {
+      location?: string;
+      photographerCredit?: string | null;
+    }
   ): Promise<string> {
     if (!this.isConfigured()) {
       throw new ServiceUnavailableError("Payload CMS");
@@ -235,13 +241,26 @@ export class PayloadApiClient {
     const blob = new Blob([fileBuffer], { type: this.getMimeType(filename) });
     formData.append("file", blob, filename);
 
+    // Build _payload object with metadata (match working curl format exactly)
+    const payload: Record<string, string> = {};
+
     if (altText) {
-      formData.append("alt_text", altText);
+      payload.alt_text = altText;
     }
 
-    if (location) {
-      formData.append("location", location);
-    }
+    // Always include photographer_credit to match working curl format (even if empty)
+    payload.photographer_credit = options?.photographerCredit || "";
+
+    // Note: location is NOT included in _payload (doesn't match working curl format)
+    // Payload might use a different mechanism for location association
+
+    // Always append _payload
+    formData.append("_payload", JSON.stringify(payload));
+
+    // Debug logging
+    console.log('🔍 [PAYLOAD REQUEST] URL:', `${this.apiUrl}/api/media-assets`);
+    console.log('🔍 [PAYLOAD REQUEST] filename:', filename);
+    console.log('🔍 [PAYLOAD REQUEST] _payload:', JSON.stringify(payload, null, 2));
 
     const response = await fetch(`${this.apiUrl}/api/media-assets`, {
       method: "POST",
@@ -251,14 +270,20 @@ export class PayloadApiClient {
       body: formData,
     });
 
+    console.log('🔍 [PAYLOAD RESPONSE] Status:', response.status, response.statusText);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ [PAYLOAD ERROR] Status:', response.status);
+      console.error('❌ [PAYLOAD ERROR] Response:', errorText);
       throw new Error(`Payload image upload failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json() as PayloadMediaAssetResponse;
 
     console.log(`✓ Uploaded image to Payload: ${data.doc.filename} → ID: ${data.doc.id}`);
+    console.log('🔍 [PAYLOAD RESPONSE] Full doc object:', JSON.stringify(data.doc, null, 2));
+    console.log('🔍 [PAYLOAD RESPONSE] altText in response:', data.doc.altText);
 
     return data.doc.id;
   }

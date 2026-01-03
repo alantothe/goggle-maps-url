@@ -61,48 +61,8 @@ export class UploadsService {
       console.warn("Some files failed to upload:", errors);
     }
 
-    if (savedPaths.length > 0) {
-      entry.images = savedPaths;
-
-      // Extract metadata and generate alt text for each saved image
-      const metadata: ImageMetadata[] = [];
-      const altTexts: string[] = [];
-
-      for (const path of savedPaths) {
-        // Construct absolute path - savedPaths are relative to cwd
-        const fullPath = join(process.cwd(), path);
-        const filename = path.split('/').pop() || 'image';
-
-        try {
-          const meta = await extractImageMetadata(fullPath);
-          metadata.push(meta);
-
-          // Generate alt text for the image
-          try {
-            const imageBuffer = await this.imageStorage.readImage(path);
-            const altText = await this.altTextApi.generateAltText(imageBuffer, filename);
-            altTexts.push(altText);
-          } catch (error) {
-            console.warn(`Failed to generate alt text for ${filename}:`, error);
-            altTexts.push(''); // Continue without alt text
-          }
-        } catch (error) {
-          console.error(`Failed to extract metadata for ${path}:`, error);
-          // Push default metadata on error
-          metadata.push({
-            width: 0,
-            height: 0,
-            size: 0,
-            format: "unknown",
-          });
-          altTexts.push(''); // No alt text on metadata extraction failure
-        }
-      }
-
-      entry.imageMetadata = metadata;
-      entry.altTexts = altTexts;
-      saveUpload(entry);
-    }
+    // REMOVED: Legacy upload fields are no longer stored in database
+    // The images, imageMetadata, and altTexts fields have been removed
 
     return entry;
   }
@@ -278,7 +238,7 @@ export class UploadsService {
     };
 
     // 8. Update entry with ImageSet and save to database
-    entry.imageSets = [imageSet];
+    entry.imageSet = imageSet;
     saveUpload(entry);
 
     return entry;
@@ -336,14 +296,13 @@ export class UploadsService {
       throw new Error("Failed to delete upload");
     }
 
-    // 3. Extract path from legacy or imageset format (using discriminated union)
+    // 3. Extract path from imageset format (legacy uploads don't store image paths anymore)
     let imagePath: string | null | undefined = null;
 
-    if (upload.format === "imageset" && upload.imageSets && upload.imageSets.length > 0) {
-      imagePath = upload.imageSets[0]?.sourceImage?.path;
-    } else if (upload.format === "legacy" && upload.images && upload.images.length > 0) {
-      imagePath = upload.images[0];
+    if (upload.format === "imageset" && upload.imageSet) {
+      imagePath = upload.imageSet.sourceImage?.path;
     }
+    // REMOVED: Legacy uploads no longer store image paths in the database
 
     if (!imagePath) {
       return; // No files to clean up

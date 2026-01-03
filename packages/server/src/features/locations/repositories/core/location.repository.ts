@@ -275,6 +275,13 @@ export function deleteLocationById(id: number): boolean {
     // Delete related uploads
     db.run("DELETE FROM uploads WHERE location_id = ?", [id]);
 
+    // Delete payload sync state (if table exists)
+    try {
+      db.run("DELETE FROM payload_sync_state WHERE location_id = ?", [id]);
+    } catch {
+      // Table may not exist yet (pre-migration), ignore error
+    }
+
     // Delete the location itself
     const deleteStmt = db.query("DELETE FROM locations WHERE id = $id");
     const result = deleteStmt.run({ $id: id });
@@ -310,6 +317,13 @@ export function deleteLocationBySlug(slug: string): boolean {
 
     // Delete related uploads
     db.run("DELETE FROM uploads WHERE location_id = ?", [location.id]);
+
+    // Delete payload sync state (if table exists)
+    try {
+      db.run("DELETE FROM payload_sync_state WHERE location_id = ?", [location.id]);
+    } catch {
+      // Table may not exist yet (pre-migration), ignore error
+    }
 
     // Delete the location itself
     const deleteStmt = db.query("DELETE FROM locations WHERE slug = $slug");

@@ -39,10 +39,10 @@ export async function extractImageMetadata(filePath: string): Promise<ImageMetad
     };
   } catch (error) {
     // Provide specific error messages for common failure modes
-    if (error.code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       throw new Error(`File not found: ${filePath}`);
     }
-    if (error.message?.includes('Input buffer') || error.message?.includes('unsupported')) {
+    if (error instanceof Error && (error.message?.includes('Input buffer') || error.message?.includes('unsupported'))) {
       throw new Error(`Invalid or corrupted image file: ${filePath}`);
     }
     console.error(`Failed to extract metadata from ${filePath}:`, error);

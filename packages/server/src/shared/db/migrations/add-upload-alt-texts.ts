@@ -41,3 +41,5 @@ export function addUploadAltTexts(): boolean {
     return false;
   }
 }
+
+

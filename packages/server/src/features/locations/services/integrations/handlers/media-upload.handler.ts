@@ -18,40 +18,17 @@ export async function uploadLocationImages(
   const instagramPostIds: string[] = [];
 
   try {
-    // Upload direct upload images (ALL images go to gallery)
+    // Upload images using ImageSet format (multi-variant system)
     for (const upload of location.uploads) {
-      // Handle discriminated union: LegacyUpload vs ImageSetUpload
-      if (upload.format === 'legacy' && upload.images && upload.images.length > 0) {
-        // Legacy format: direct image paths
-        for (const imagePath of upload.images) {
-          try {
-            const imageBuffer = await imageStorage.readImage(imagePath);
-            const filename = imagePath.split("/").pop() || "image.jpg";
-            const altText = upload.photographerCredit ?
-              `Photo by ${upload.photographerCredit}` :
-              location.title || location.source.name;
-
-            const mediaAssetId = await payloadClient.uploadImage(
-              imageBuffer,
-              filename,
-              altText,
-              mapLocationKeyToPayloadLocation(location.locationKey || undefined)
-            );
-
-            galleryImageIds.push(mediaAssetId);
-          } catch (error) {
-            console.warn(`⚠️  Failed to upload image ${imagePath}:`, error);
-            // Continue with other images
-          }
-        }
-      } else if (upload.format === 'imageset' && upload.imageSets && upload.imageSets.length > 0) {
+      // Only handle ImageSetUpload format
+      if (upload.format === 'imageset' && upload.imageSet) {
         // ImageSet format: upload ONLY variants (skip source image)
-        for (const imageSet of upload.imageSets) {
-          // Validate variants exist
-          if (!imageSet.variants || imageSet.variants.length === 0) {
-            console.warn(`⚠️  ImageSet ${imageSet.id} has no variants, skipping`);
-            continue;
-          }
+        const imageSet = upload.imageSet;
+        // Validate variants exist
+        if (!imageSet.variants || imageSet.variants.length === 0) {
+          console.warn(`⚠️  ImageSet ${imageSet.id} has no variants, skipping`);
+          continue;
+        }
 
           // Define standard variant order for consistent upload sequence
           const variantOrder: ImageVariantType[] = ['thumbnail', 'square', 'wide', 'portrait', 'hero'];
@@ -69,14 +46,21 @@ export async function uploadLocationImages(
               const imageBuffer = await imageStorage.readImage(variant.path);
               const filename = variant.path.split("/").pop() || "image.jpg";
 
-              // Use variant type as alt text (e.g., "thumbnail", "square")
-              const altText = variantType;
+              // Use base alt text for all variants (no variant-specific descriptions)
+              // Photographer credit is sent separately, not merged into altText
+              const altText = imageSet.altText || `${location.title || location.source.name}`;
+
+              console.log('🔍 [DEBUG] altText:', altText);
+              console.log('🔍 [DEBUG] photographerCredit:', imageSet.photographerCredit);
 
               const mediaAssetId = await payloadClient.uploadImage(
                 imageBuffer,
                 filename,
                 altText,
-                mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+                {
+                  location: mapLocationKeyToPayloadLocation(location.locationKey || undefined),
+                  photographerCredit: imageSet.photographerCredit
+                }
               );
 
               galleryImageIds.push(mediaAssetId);
@@ -85,7 +69,6 @@ export async function uploadLocationImages(
               // Continue with remaining variants (graceful degradation)
             }
           }
-        }
       }
     }
 
@@ -101,13 +84,15 @@ export async function uploadLocationImages(
           // Step 1: Upload ONLY first image as preview
           const imageBuffer = await imageStorage.readImage(previewImagePath);
           const filename = previewImagePath.split("/").pop() || "instagram.jpg";
-          const altText = `Instagram post by ${embed.username}`;
+          const altText = `Instagram post by ${embed.username} at ${location.title || location.source.name}`;
 
           previewMediaAssetId = await payloadClient.uploadImage(
             imageBuffer,
             filename,
             altText,
-            mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+            {
+              location: mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+            }
           );
 
           // Step 2: Create Instagram post with preview image
