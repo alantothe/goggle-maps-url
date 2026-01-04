@@ -176,10 +176,10 @@ export function LocationDetailView({ locationDetail, isLoading, error, onCopyFie
         {locationDetail.contact?.website && (
           <DetailField
             label="Website"
-            value={locationDetail.contact.website}
-            onClick={(e) => onCopyField(locationDetail.contact!.website!, e)}
+            value={truncateUrl(locationDetail.contact.website)}
+            onClick={(e) => onCopyField(locationDetail.contact.website, e)}
             title="Click to copy website URL"
-            valueClassName="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors"
+            valueClassName="text-sm text-blue-600 hover:text-blue-700 cursor-pointer underline underline-offset-2 decoration-gray-400 hover:decoration-gray-600 transition-colors break-all"
           />
         )}
 
