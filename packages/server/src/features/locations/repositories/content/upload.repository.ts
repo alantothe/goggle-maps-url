@@ -20,9 +20,11 @@ interface UploadDbRow {
  */
 function mapRow(row: UploadDbRow): Upload {
   return {
-    ...row,
+    id: row.id,
+    location_id: row.location_id,
     imageSet: row.imageSets ? JSON.parse(row.imageSets) : undefined,
     format: 'imageset',
+    created_at: row.created_at,
   } as ImageSetUpload;
 }
 

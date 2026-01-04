@@ -273,3 +273,24 @@ export function buildNestedHierarchy(locations: LocationHierarchy[]): CountryDat
 
   return Array.from(countryMap.values());
 }
+
+/**
+ * Sanitize location name for use in filenames
+ * Example: "Panchita - Miraflores" -> "panchita-miraflores"
+ */
+export function sanitizeLocationName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove all symbols except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+}
+
+/**
+ * Get file extension from path
+ */
+export function getFileExtension(path: string): string {
+  const match = path.match(/\.([^.]+)$/);
+  return match ? match[1] : 'jpg';
+}

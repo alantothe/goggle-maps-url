@@ -7,6 +7,7 @@ import { getLocationById } from "../../repositories/core";
 import { saveUpload, getUploadById, deleteUploadById } from "../../repositories/content";
 import { createFromUpload, createFromImageSetUpload } from "../geocoding/location-geocoding.helper";
 import { extractImageMetadata } from "../../utils/image-metadata-extractor";
+import { sanitizeLocationName, getFileExtension } from "../../utils/location-utils";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { VARIANT_SPECS as VARIANT_SPECS_IMPORT } from "@url-util/shared";
@@ -191,7 +192,10 @@ export class UploadsService {
 
     for (const { type, file } of variantFiles) {
       const spec = VARIANT_SPECS_IMPORT[type];
-      const variantFileName = `0_${type}.${this.getFileExtension(file.name)}`;
+      // Generate filename: {sanitized-location-name}_{variantType}.{extension}
+      const sanitizedName = sanitizeLocationName(parentLocation.name);
+      const extension = getFileExtension(file.name);
+      const variantFileName = `${sanitizedName}_${type}.${extension}`;
       const variantFilePath = join(storagePath, variantFileName);
 
       try {

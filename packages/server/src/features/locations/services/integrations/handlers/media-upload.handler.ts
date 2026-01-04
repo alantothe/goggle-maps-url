@@ -4,27 +4,7 @@ import { ImageStorageService } from "@server/shared/services/storage/image-stora
 import type { UploadedImagesResult } from "../types";
 import { mapLocationKeyToPayloadLocation } from "../mappers";
 import type { ImageVariantType } from "@url-util/shared";
-
-/**
- * Sanitize location name for use in filenames
- * Example: "Panchita - Miraflores" -> "panchita-miraflores"
- */
-function sanitizeLocationName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove all symbols except spaces and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-}
-
-/**
- * Get file extension from path
- */
-function getFileExtension(path: string): string {
-  const match = path.match(/\.([^.]+)$/);
-  return match ? match[1] : 'jpg';
-}
+import { sanitizeLocationName, getFileExtension } from "../../../utils/location-utils";
 
 /**
  * Upload images and create Instagram posts for a location
