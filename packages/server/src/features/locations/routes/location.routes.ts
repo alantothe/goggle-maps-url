@@ -24,6 +24,7 @@ import {
   clearDatabase, scanOrphanedFiles, cleanupOrphanedFiles,
   getPendingTaxonomy, approveTaxonomy, rejectTaxonomy,
   getAllCorrections, previewCorrection, createCorrection, deleteCorrection,
+  getPayloadLocationRefs,
 
   // Integration
   postSyncLocation, postSyncAll, getSyncStatus, getTestConnection,
@@ -68,6 +69,9 @@ app.get("/api/clear-db", clearDatabase);
 // Admin orphan cleanup routes
 app.get("/api/admin/orphaned-files", scanOrphanedFiles);
 app.post("/api/admin/orphaned-files/cleanup", cleanupOrphanedFiles);
+
+// Admin payload location refs route
+app.get("/api/admin/payload-location-refs", getPayloadLocationRefs);
 
 // Location hierarchy API routes
 app.get("/api/location-hierarchy", getLocationHierarchy);

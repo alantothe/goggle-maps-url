@@ -27,7 +27,7 @@ import type { SyncStatusResponse } from "@client/shared/services/api/payload.api
 type SyncStatusFilter = "all" | "synced" | "not-synced" | "failed";
 
 export function PayloadSync() {
-  const { data: statusData, isLoading, error } = useSyncStatus();
+  const { data: statusData, isLoading, error, refetch: refetchSyncStatus } = useSyncStatus();
   const syncLocationMutation = useSyncLocation();
   const syncAllMutation = useSyncAll();
   const { data: connectionStatus, isLoading: isConnecting, refetch: testConnection } = usePayloadConnection();
@@ -90,17 +90,11 @@ export function PayloadSync() {
   const handleClearDatabase = async () => {
     try {
       await clearDatabaseMutation.mutateAsync();
-      showToast({
-        title: "Database Cleared",
-        description: "All location data and caches have been cleared successfully.",
-        variant: "success",
-      });
+      // Refetch sync status to show updated (empty) data
+      await refetchSyncStatus();
+      showToast("Database cleared successfully", { x: window.innerWidth / 2, y: 100 });
     } catch (error) {
-      showToast({
-        title: "Error",
-        description: "Failed to clear database. Please try again.",
-        variant: "error",
-      });
+      showToast("Failed to clear database. Please try again.", { x: window.innerWidth / 2, y: 100 });
     }
   };
 

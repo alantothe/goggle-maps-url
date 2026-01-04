@@ -19,11 +19,14 @@ import { validateCategory, validateCategoryWithDefault } from "../../utils/categ
 import { TaxonomyService } from "../taxonomy/taxonomy.service";
 import { TaxonomyCorrectionService } from "../taxonomy/taxonomy-correction.service";
 
+import type { PayloadApiClient } from "@server/shared/services/external/payload-api.client";
+
 export class MapsService {
   constructor(
     private readonly config: EnvConfig,
     private readonly taxonomyService: TaxonomyService,
-    private readonly taxonomyCorrectionService: TaxonomyCorrectionService
+    private readonly taxonomyCorrectionService: TaxonomyCorrectionService,
+    private readonly payloadClient: PayloadApiClient
   ) {}
 
   async addMapsLocation(payload: CreateMapsRequest): Promise<LocationResponse> {
@@ -42,6 +45,22 @@ export class MapsService {
       // Apply corrections BEFORE ensuring taxonomy
       entry.locationKey = this.taxonomyCorrectionService.applyCorrections(entry.locationKey);
       this.taxonomyService.ensureTaxonomyEntry(entry.locationKey);
+
+      // NEW: Resolve Payload locationRef (REQUIRED if Payload is configured)
+      if (this.payloadClient.isConfigured()) {
+        const { resolvePayloadLocationRef } = await import('./resolvers');
+        const locationRef = await resolvePayloadLocationRef(entry, this.payloadClient);
+
+        if (!locationRef) {
+          throw new BadRequestError(
+            `Failed to resolve Payload location for locationKey: ${entry.locationKey}. ` +
+            `Ensure the location hierarchy exists in Payload CMS.`
+          );
+        }
+
+        entry.payload_location_ref = locationRef;
+        console.log(`✓ Resolved Payload locationRef: ${locationRef}`);
+      }
     }
 
     saveLocation(entry);

@@ -17,6 +17,7 @@ import { addUploadAltTexts } from "./migrations/add-upload-alt-texts";
 import { removeUploadRedundantFields } from "./migrations/remove-upload-redundant-fields";
 import { removeUnusedUploadFields } from "./migrations/remove-unused-upload-fields";
 import { convertImageSetsToSingleObject } from "./migrations/convert-imagesets-to-single-object";
+import { addPayloadLocationRef } from "./migrations/add-payload-location-ref";
 
 let db: Database | null = null;
 
@@ -175,6 +176,9 @@ export function initDb() {
 
   // Run migration to convert imageSets from array to single object
   convertImageSetsToSingleObject();
+
+  // Run migration to add payload_location_ref column to locations table
+  addPayloadLocationRef(database);
 }
 
 export function getDb(): Database {

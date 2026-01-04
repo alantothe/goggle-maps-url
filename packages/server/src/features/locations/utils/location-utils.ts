@@ -174,6 +174,7 @@ export function transformLocationToResponse(location: LocationWithNested): Locat
     category: location.category || 'attractions',
     locationKey: location.locationKey || null,
     district: location.district || null,
+    payload_location_ref: location.payload_location_ref || null,
     contact: {
       countryCode: location.countryCode || null,
       phoneNumber: location.phoneNumber || null,

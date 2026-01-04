@@ -54,7 +54,8 @@ export class ServiceContainer {
     this.mapsService = new MapsService(
       this.config,
       this.taxonomyService,
-      this.taxonomyCorrectionService
+      this.taxonomyCorrectionService,
+      this.payloadApi
     );
     this.instagramService = new InstagramService(
       this.instagramApi,

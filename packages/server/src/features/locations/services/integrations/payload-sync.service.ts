@@ -8,7 +8,6 @@ import * as PayloadSyncRepo from "../../repositories/integration";
 // Import sub-modules
 import type { SyncResult, SyncStatusResponse } from "./types";
 import { uploadLocationImages } from "./handlers";
-import { resolvePayloadLocationRef } from "./resolvers";
 import { mapLocationToPayloadFormat, mapCategoryToCollection } from "./mappers";
 
 export class PayloadSyncService {
@@ -38,16 +37,18 @@ export class PayloadSyncService {
         throw new NotFoundError("Location", locationId);
       }
 
-      // Resolve Payload location reference (REQUIRED by Payload)
-      const locationRef = await resolvePayloadLocationRef(location, this.payloadClient);
+      // Use stored locationRef (already resolved during creation)
+      const locationRef = location.payload_location_ref;
 
-      // If locationRef is required by Payload but resolution failed, abort sync
       if (!locationRef) {
         throw new BadRequestError(
           `Cannot sync location ${locationId}: locationRef is required by Payload CMS. ` +
-          `Location must have a valid locationKey (current: ${location.locationKey || "none"})`
+          `Location must be created with a valid locationKey. ` +
+          `Current locationKey: ${location.locationKey || "none"}`
         );
       }
+
+      console.log(`✓ Using stored locationRef for location ${locationId}: ${locationRef}`);
 
       // Upload images and create Instagram posts
       const uploadedImages = await uploadLocationImages(location, this.payloadClient, this.imageStorage);

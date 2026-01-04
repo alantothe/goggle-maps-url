@@ -22,8 +22,8 @@ export function saveLocation(location: Location): number | boolean {
   try {
     const db = getDb();
     const query = db.query(`
-      INSERT INTO locations (name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug)
-      VALUES ($name, $title, $address, $url, $lat, $lng, $category, $locationKey, $district, $contactAddress, $countryCode, $phoneNumber, $website, $slug)
+      INSERT INTO locations (name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug, payload_location_ref)
+      VALUES ($name, $title, $address, $url, $lat, $lng, $category, $locationKey, $district, $contactAddress, $countryCode, $phoneNumber, $website, $slug, $payload_location_ref)
       ON CONFLICT(name, address) DO UPDATE SET
         title = excluded.title,
         url = excluded.url,
@@ -37,6 +37,7 @@ export function saveLocation(location: Location): number | boolean {
         phoneNumber = excluded.phoneNumber,
         website = excluded.website,
         slug = excluded.slug,
+        payload_location_ref = excluded.payload_location_ref,
         created_at = CURRENT_TIMESTAMP
     `);
 
@@ -55,6 +56,7 @@ export function saveLocation(location: Location): number | boolean {
       $phoneNumber: location.phoneNumber || null,
       $website: location.website || null,
       $slug: location.slug || null,
+      $payload_location_ref: location.payload_location_ref || null,
     });
 
     const result = db.query("SELECT last_insert_rowid() as id").get() as { id: number };
@@ -133,6 +135,10 @@ export function updateLocationById(id: number, updates: Partial<Location>): bool
       setClause.push("website = $website");
       params.$website = updates.website;
     }
+    if (updates.payload_location_ref !== undefined) {
+      setClause.push("payload_location_ref = $payload_location_ref");
+      params.$payload_location_ref = updates.payload_location_ref;
+    }
 
     if (setClause.length === 0) {
       return false;
@@ -167,7 +173,7 @@ export function getAllLocations(): Location[] {
   const query = db.query(`
     SELECT DISTINCT l.id, l.name, l.title, l.address, l.url, l.lat, l.lng,
            l.category, l.locationKey, l.district, l.contactAddress,
-           l.countryCode, l.phoneNumber, l.website, l.slug, l.created_at
+           l.countryCode, l.phoneNumber, l.website, l.slug, l.payload_location_ref, l.created_at
     FROM locations l
     LEFT JOIN location_taxonomy t ON l.locationKey = t.locationKey
     WHERE l.locationKey IS NULL OR t.status = 'approved'
@@ -187,7 +193,7 @@ export function getLocationsByCategory(category: string): Location[] {
   const query = db.query(`
     SELECT DISTINCT l.id, l.name, l.title, l.address, l.url, l.lat, l.lng,
            l.category, l.locationKey, l.district, l.contactAddress,
-           l.countryCode, l.phoneNumber, l.website, l.slug, l.created_at
+           l.countryCode, l.phoneNumber, l.website, l.slug, l.payload_location_ref, l.created_at
     FROM locations l
     LEFT JOIN location_taxonomy t ON l.locationKey = t.locationKey
     WHERE l.category = $category
@@ -208,7 +214,7 @@ export function getLocationById(id: number): Location | null {
   const query = db.query(`
     SELECT DISTINCT l.id, l.name, l.title, l.address, l.url, l.lat, l.lng,
            l.category, l.locationKey, l.district, l.contactAddress,
-           l.countryCode, l.phoneNumber, l.website, l.slug, l.created_at
+           l.countryCode, l.phoneNumber, l.website, l.slug, l.payload_location_ref, l.created_at
     FROM locations l
     LEFT JOIN location_taxonomy t ON l.locationKey = t.locationKey
     WHERE l.id = $id
@@ -226,7 +232,7 @@ export function getLocationById(id: number): Location | null {
  */
 export function getLocationBySlug(slug: string): Location | null {
   const db = getDb();
-  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug, created_at FROM locations WHERE slug = $slug");
+  const query = db.query("SELECT id, name, title, address, url, lat, lng, category, locationKey, district, contactAddress, countryCode, phoneNumber, website, slug, payload_location_ref, created_at FROM locations WHERE slug = $slug");
   const row = query.get({ $slug: slug }) as Location | undefined;
   return row || null;
 }

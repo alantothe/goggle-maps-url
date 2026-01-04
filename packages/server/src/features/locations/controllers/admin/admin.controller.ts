@@ -96,3 +96,20 @@ export async function cleanupOrphanedFiles(c: Context) {
     errors: deletionResult.errors
   }));
 }
+
+export function getPayloadLocationRefs(c: Context) {
+  const db = getDb();
+
+  const locationRefs = db.query(`
+    SELECT
+      id,
+      name,
+      locationKey,
+      payload_location_ref,
+      created_at
+    FROM locations
+    ORDER BY id DESC
+  `).all();
+
+  return c.json(successResponse({ locationRefs }));
+}

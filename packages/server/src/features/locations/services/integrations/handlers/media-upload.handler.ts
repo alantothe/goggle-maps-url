@@ -6,6 +6,27 @@ import { mapLocationKeyToPayloadLocation } from "../mappers";
 import type { ImageVariantType } from "@url-util/shared";
 
 /**
+ * Sanitize location name for use in filenames
+ * Example: "Panchita - Miraflores" -> "panchita-miraflores"
+ */
+function sanitizeLocationName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove all symbols except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+}
+
+/**
+ * Get file extension from path
+ */
+function getFileExtension(path: string): string {
+  const match = path.match(/\.([^.]+)$/);
+  return match ? match[1] : 'jpg';
+}
+
+/**
  * Upload images and create Instagram posts for a location
  * Returns separate arrays for gallery images and Instagram post IDs
  */
@@ -44,7 +65,11 @@ export async function uploadLocationImages(
 
             try {
               const imageBuffer = await imageStorage.readImage(variant.path);
-              const filename = variant.path.split("/").pop() || "image.jpg";
+
+              // Generate filename: {sanitized-source-name}_{variantType}.{extension}
+              const sanitizedName = sanitizeLocationName(location.source.name);
+              const extension = getFileExtension(variant.path);
+              const filename = `${sanitizedName}_${variantType}.${extension}`;
 
               // Use base alt text for all variants (no variant-specific descriptions)
               // Photographer credit is sent separately, not merged into altText
@@ -58,7 +83,7 @@ export async function uploadLocationImages(
                 filename,
                 altText,
                 {
-                  location: mapLocationKeyToPayloadLocation(location.locationKey || undefined),
+                  location: location.payload_location_ref || undefined,
                   photographerCredit: imageSet.photographerCredit
                 }
               );
@@ -83,7 +108,12 @@ export async function uploadLocationImages(
         try {
           // Step 1: Upload ONLY first image as preview
           const imageBuffer = await imageStorage.readImage(previewImagePath);
-          const filename = previewImagePath.split("/").pop() || "instagram.jpg";
+
+          // Generate filename: {sanitized-source-name}_instagram.{extension}
+          const sanitizedName = sanitizeLocationName(location.source.name);
+          const extension = getFileExtension(previewImagePath);
+          const filename = `${sanitizedName}_instagram.${extension}`;
+
           const altText = `Instagram post by ${embed.username} at ${location.title || location.source.name}`;
 
           previewMediaAssetId = await payloadClient.uploadImage(
@@ -91,7 +121,7 @@ export async function uploadLocationImages(
             filename,
             altText,
             {
-              location: mapLocationKeyToPayloadLocation(location.locationKey || undefined)
+              location: location.payload_location_ref || undefined
             }
           );
 

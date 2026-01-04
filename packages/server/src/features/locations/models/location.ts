@@ -48,6 +48,7 @@ export interface Location {
   phoneNumber?: string | null;
   website?: string | null;
   slug?: string | null;
+  payload_location_ref?: string | null;  // Payload CMS location hierarchy ID
   created_at?: string;
 }
 
@@ -142,6 +143,7 @@ export interface LocationResponse {
   category: LocationCategory;
   locationKey: string | null;
   district: string | null;
+  payload_location_ref: string | null;
   contact: LocationContact;
   coordinates: LocationCoordinates;
   source: LocationSource;
