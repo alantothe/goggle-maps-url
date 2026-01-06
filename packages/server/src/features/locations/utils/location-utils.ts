@@ -26,7 +26,7 @@ export function parseLocationValue(locationKey: string): LocationHierarchy | nul
   const [country, city, neighborhood] = parts;
 
   return {
-    country,
+    country: country!,
     city: city || null,
     neighborhood: neighborhood || null,
     locationKey,
@@ -293,5 +293,5 @@ export function sanitizeLocationName(name: string): string {
  */
 export function getFileExtension(path: string): string {
   const match = path.match(/\.([^.]+)$/);
-  return match ? match[1] : 'jpg';
+  return match?.[1] || 'jpg';
 }
