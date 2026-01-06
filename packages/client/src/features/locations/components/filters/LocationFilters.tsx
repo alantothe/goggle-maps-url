@@ -55,45 +55,49 @@ export function LocationFilters({
         isLoading={isLoadingCountries}
       />
 
-      {/* City Select */}
-      <div>
-        <Select
-          value={selectedCity ?? ""}
-          onValueChange={onCityChange}
-          disabled={!selectedCountry || cities.length === 0}
-        >
-          <SelectTrigger style={{ width: "200px" }}>
-            <SelectValue placeholder={!selectedCountry ? "Select country first" : "All cities"} />
-          </SelectTrigger>
-          <SelectContent>
-            {cities.map(city => (
-              <SelectItem key={city.value} value={city.value}>
-                {city.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* City Select - only show after country is selected */}
+      {selectedCountry && (
+        <div>
+          <Select
+            value={selectedCity ?? ""}
+            onValueChange={onCityChange}
+            disabled={cities.length === 0}
+          >
+            <SelectTrigger style={{ width: "200px" }}>
+              <SelectValue placeholder="All cities" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map(city => (
+                <SelectItem key={city.value} value={city.value}>
+                  {city.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
-      {/* Neighborhood Select */}
-      <div>
-        <Select
-          value={selectedNeighborhood ?? ""}
-          onValueChange={onNeighborhoodChange}
-          disabled={!selectedCity || neighborhoods.length === 0}
-        >
-          <SelectTrigger style={{ width: "200px" }}>
-            <SelectValue placeholder={!selectedCity ? "Select city first" : "All neighborhoods"} />
-          </SelectTrigger>
-          <SelectContent>
-            {neighborhoods.map(n => (
-              <SelectItem key={n.value} value={n.value}>
-                {n.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Neighborhood Select - only show after city is selected */}
+      {selectedCity && (
+        <div>
+          <Select
+            value={selectedNeighborhood ?? ""}
+            onValueChange={onNeighborhoodChange}
+            disabled={neighborhoods.length === 0}
+          >
+            <SelectTrigger style={{ width: "200px" }}>
+              <SelectValue placeholder="All neighborhoods" />
+            </SelectTrigger>
+            <SelectContent>
+              {neighborhoods.map(n => (
+                <SelectItem key={n.value} value={n.value}>
+                  {n.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <CategorySelect
         value={selectedCategory}
@@ -101,13 +105,14 @@ export function LocationFilters({
         disabled={false} // Category can be selected independently of country
       />
 
-      <Button
-        variant="outline"
-        onClick={onReset}
-        disabled={!hasFilters}
-      >
-        Clear Filters
-      </Button>
+      {hasFilters && (
+        <Button
+          variant="outline"
+          onClick={onReset}
+        >
+          Clear Filters
+        </Button>
+      )}
     </div>
   );
 }
